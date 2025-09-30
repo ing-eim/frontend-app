@@ -1,0 +1,31 @@
+<div class="dashboard-layout">
+  <aside class="sidebar">
+    <h3>Menú</h3>
+    <ul>
+      <li><a routerLink="/dashboard">Inicio</a></li>
+      <li><a routerLink="/dashboard/operaciones">Operaciones</a></li>
+      <li><a routerLink="/dashboard/reportes">Reportes</a></li>
+      <li><button (click)="logout()">Cerrar sesión</button></li>
+    </ul>
+  </aside>
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-content">
+        <img src="assets/Logotipo-Home.png" alt="Logo" class="logo" />
+        <div class="user-info" (click)="toggleMenu()" tabindex="0" style="position:relative;cursor:pointer;">
+          <span>Usuario: {{ auth.getUsername() }}</span>
+          <span class="user-menu-icon"><i class="fas fa-user"></i></span>
+          <div *ngIf="menuOpen" class="user-menu">
+            <button (click)="logout()">
+              <i class="fas fa-sign-out-alt logout-icon"></i> Cerrar sesión
+            </button>
+            <!-- Puedes agregar más opciones aquí -->
+          </div>
+        </div>
+      </div>
+    </header>
+    <section class="content">
+      <router-outlet></router-outlet>
+    </section>
+  </div>
+</div>

@@ -1,0 +1,105 @@
+.dashboard-layout {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background: #263238;
+  color: #fff;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.sidebar h3 {
+  margin-bottom: 1rem;
+}
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+.sidebar li {
+  margin-bottom: 1rem;
+}
+.sidebar a, .sidebar button {
+  color: #fff;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  text-decoration: none;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.topbar {
+  background: #000;
+  color: #fff;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  display: flex;
+  align-items: center;
+}
+.topbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.logo {
+  height: 40px;
+  margin-right: 2rem;
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+.user-menu-icon {
+  font-size: 1.2rem;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  display: inline-block;
+}
+.user-menu {
+  position: absolute;
+  top: 2.2rem;
+  right: 0;
+  background: #222;
+  color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  min-width: 160px;
+  padding: 0.5rem 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+.user-menu button {
+  background: none;
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  text-align: left;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+.user-menu button:hover {
+  background: #444;
+}
+.content {
+  flex: 1;
+  padding: 2rem;
+}
+.logout-icon {
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+  display: inline-block;
+}

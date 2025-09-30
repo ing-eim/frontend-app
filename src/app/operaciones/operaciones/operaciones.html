@@ -1,0 +1,9 @@
+<p>operaciones works!</p>
+<div class="excel-upload-container">
+  <h2>Cargar archivo Excel</h2>
+  <form>
+    <input type="file" accept=".xlsx,.xls" (change)="onFileSelected($event)" />
+    <button type="button" (click)="uploadFile()" [disabled]="!selectedFile">Subir archivo</button>
+  </form>
+  <div *ngIf="uploadMessage" class="upload-message">{{ uploadMessage }}</div>
+</div>
