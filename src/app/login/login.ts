@@ -14,15 +14,20 @@ export class Login {
   username: string = '';
   password: string = '';
   error: string = '';
+  loading: boolean = false;
 
   constructor(private auth: Auth, private router: Router) {}
 
   login() {
-    if (!this.auth.login(this.username, this.password)) {
-      this.error = 'Usuario o contraseña incorrectos';
-    } else {
-      this.error = '';
-      this.router.navigate(['/dashboard']);
-    }
+    this.loading = true;
+    this.auth.login(this.username, this.password).subscribe(success => {
+      this.loading = false;
+      if (success) {
+        this.error = '';
+        this.router.navigate(['/dashboard']);
+      } else {
+        this.error = 'Usuario o contraseña incorrectos';
+      }
+    });
   }
 }

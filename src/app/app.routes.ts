@@ -10,7 +10,10 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'operaciones', pathMatch: 'full' },
       { path: 'operaciones', loadComponent: () => import('./operaciones/operaciones/operaciones').then(m => m.Operaciones) },
-      { path: 'reportes', loadComponent: () => import('./reportes/reportes/reportes').then(m => m.Reportes) }
+      { path: 'reportes', loadComponent: () => import('./reportes/reportes/reportes').then(m => m.Reportes) },
+      { path: 'usuarios', loadComponent: () => import('./usuarios/usuarios').then(m => m.Usuarios) },
+      { path: 'roles', loadComponent: () => import('./roles/roles').then(m => m.Roles) },
+      { path: 'bitacora', loadComponent: () => import('./bitacora/bitacora').then(m => m.Bitacora) }
     ]
   }
 ];

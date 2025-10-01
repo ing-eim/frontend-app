@@ -1,0 +1,73 @@
+.usuarios-container {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  max-width: 700px;
+  margin: 2rem auto;
+}
+.usuarios-container h2 {
+  margin-bottom: 1.5rem;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 0.75rem;
+  text-align: left;
+}
+th {
+  background: #1976d2;
+  color: #fff;
+}
+td button {
+  margin-right: 0.5rem;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 0.3rem;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+td button:last-child {
+  background: #d32f2f;
+}
+.error {
+  color: #d32f2f;
+  margin-bottom: 1rem;
+}
+.crear-usuario-form {
+  background: #f5f5f5;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  max-width: 400px;
+}
+.crear-usuario-form label {
+  display: block;
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+.crear-usuario-form input {
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.3rem;
+  border: 1px solid #ccc;
+}
+.crear-usuario-form button {
+  margin-right: 0.5rem;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 0.3rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+.crear-usuario-form button[type="button"] {
+  background: #aaa;
+}

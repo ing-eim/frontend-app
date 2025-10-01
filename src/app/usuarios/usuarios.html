@@ -1,0 +1,49 @@
+<div class="usuarios-container">
+  <h2>Gestión de Usuarios</h2>
+  <div *ngIf="loading">Cargando usuarios...</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+  <table *ngIf="usuarios.length">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Usuario</th>
+        <th>Email</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let u of usuarios">
+        <td>{{ u.id }}</td>
+        <td>
+          <span *ngIf="editandoId !== u.id">{{ u.nombre_usuario }}</span>
+          <input *ngIf="editandoId === u.id" [(ngModel)]="editUsuario.nombre_usuario" name="editNombreUsuario{{u.id}}" />
+        </td>
+        <td>
+          <span *ngIf="editandoId !== u.id">{{ u.correo_electronico }}</span>
+          <input *ngIf="editandoId === u.id" [(ngModel)]="editUsuario.correo_electronico" name="editCorreoElectronico{{u.id}}" />
+        </td>
+        <td>
+          <button *ngIf="editandoId !== u.id" (click)="mostrarEditar(u)">Editar</button>
+          <button *ngIf="editandoId === u.id" (click)="actualizarUsuario()">Guardar</button>
+          <button *ngIf="editandoId === u.id" (click)="cancelarEditar()">Cancelar</button>
+          <button (click)="eliminarUsuario(u.id)">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <button (click)="mostrarCrear()" *ngIf="!creando">Crear usuario</button>
+  <div *ngIf="creando" class="crear-usuario-form">
+    <h3>Nuevo usuario</h3>
+    <form (ngSubmit)="crearUsuario()">
+      <label>Usuario</label>
+      <input [(ngModel)]="nuevoUsuario.nombre_usuario" name="nombre_usuario" required />
+      <label>Email</label>
+      <input [(ngModel)]="nuevoUsuario.correo_electronico" name="correo_electronico" required />
+      <label>Contraseña</label>
+      <input [(ngModel)]="nuevoUsuario.contrasena" name="contrasena" type="password" required />
+      <button type="submit">Guardar</button>
+      <button type="button" (click)="cancelarCrear()">Cancelar</button>
+      <div *ngIf="crearError" class="error">{{ crearError }}</div>
+    </form>
+  </div>
+  <div *ngIf="editError" class="error">{{ editError }}</div>
+</div>
