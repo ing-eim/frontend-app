@@ -1,11 +1,12 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+   { path: '', redirectTo: 'login', pathMatch: 'full' }, 
+  //{ path: '', redirectTo: 'dashboard', pathMatch: 'full' }, // Temporal para pruebas
   { path: 'login', loadComponent: () => import('./login/login').then(m => m.Login) },
   {
     path: 'dashboard',
-    canActivate: [() => import('./login/auth-guard').then(m => m.authGuard)],
+    canActivate: [() => import('./login/auth-guard').then(m => m.authGuard)], 
     loadComponent: () => import('./dashboard/dashboard').then(m => m.Dashboard),
     children: [
       { path: '', redirectTo: 'operaciones', pathMatch: 'full' },

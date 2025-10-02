@@ -1,105 +1,341 @@
+// Colores corporativos (matching login colors)
+$corporate-green: #388E3C;
+$corporate-green-hover: #2E7D32;
+$corporate-green-light: rgba(56, 142, 60, 0.1);
+$corporate-dark: #2a2a2a;
+$corporate-black: #1a1a1a;
+$corporate-gray: #404040;
+$white: #ffffff;
+$light-gray: #f0f0f0;
+
 .dashboard-layout {
   display: flex;
   height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+// ========== SIDEBAR ==========
 .sidebar {
-  width: 220px;
-  background: #263238;
-  color: #fff;
-  padding: 2rem 1rem;
+  width: 240px;
+  background: linear-gradient(180deg, $corporate-dark 0%, $corporate-black 100%);
+  color: $white;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-}
-.sidebar h3 {
-  margin-bottom: 1rem;
-}
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-}
-.sidebar li {
-  margin-bottom: 1rem;
-}
-.sidebar a, .sidebar button {
-  color: #fff;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-  text-decoration: none;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
+  position: relative;
+  transition: width 0.3s ease;
+  border-right: 2px solid $corporate-green;
+  
+  &.collapsed {
+    width: 70px;
+    
+    .sidebar-header h3 {
+      display: none;
+    }
+    
+    .toggle-btn {
+      margin: 0 auto;
+    }
+    
+    .sidebar-nav ul li a,
+    .sidebar-nav ul li button {
+      justify-content: center;
+      padding: 0.75rem;
+      
+      i {
+        margin-right: 0;
+      }
+    }
+  }
 }
 
+.sidebar-header {
+  padding: 1.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid rgba($corporate-green, 0.2);
+  position: relative;
+  
+  h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: $white;
+    text-align: center;
+    flex: 1;
+  }
+}
+
+.toggle-btn {
+  background: rgba($corporate-green, 0.2);
+  border: 1px solid $corporate-green;
+  color: $corporate-green;
+  border-radius: 4px;
+  padding: 0.4rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 1rem;
+  
+  &:hover {
+    background: $corporate-green;
+    color: $white;
+    transform: scale(1.1);
+  }
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0;
+  
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    
+    li {
+      margin: 0.3rem 0;
+      
+      a, button {
+        color: $white;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        padding: 0.8rem 1.5rem;
+        margin: 0 0.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 0.95rem;
+        font-weight: 500;
+        width: calc(100% - 1rem);
+        text-align: left;
+        position: relative;
+        
+        i {
+          font-size: 1.1rem;
+          margin-right: 1rem;
+          min-width: 20px;
+          text-align: center;
+          color: rgba($white, 0.8);
+          transition: color 0.3s ease;
+        }
+        
+        span {
+          white-space: nowrap;
+          transition: opacity 0.3s ease;
+        }
+        
+        &:hover {
+          background: rgba($corporate-green, 0.15);
+          color: $white;
+          transform: translateX(5px);
+          
+          i {
+            color: $corporate-green;
+          }
+        }
+        
+        &.active {
+          background: linear-gradient(90deg, $corporate-green-light 0%, transparent 100%);
+          color: $corporate-green;
+          border-left: 3px solid $corporate-green;
+          font-weight: 600;
+          
+          i {
+            color: $corporate-green;
+          }
+        }
+      }
+      
+      .logout-btn {
+        margin-top: 2rem;
+        
+        &:hover {
+          background: rgba(255, 107, 107, 0.15);
+          color: #ff6b6b;
+          
+          i {
+            color: #ff6b6b;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ========== MAIN CONTENT ==========
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
+
 .topbar {
-  background: #000;
-  color: #fff;
+  background: linear-gradient(90deg, $corporate-black 0%, $corporate-dark 100%);
+  color: $white;
   padding: 1rem 2rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
+  border-bottom: 2px solid $corporate-green;
 }
+
 .topbar-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
 }
+
 .logo {
-  height: 40px;
+  height: 45px;
   margin-right: 2rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
 }
+
 .user-info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   position: relative;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  background: rgba($corporate-green, 0.1);
+  border: 1px solid rgba($corporate-green, 0.3);
+  cursor: pointer;
+  font-weight: 500;
+  
+  &:hover {
+    background: rgba($corporate-green, 0.2);
+    border-color: $corporate-green;
+    transform: translateY(-1px);
+  }
 }
+
 .user-menu-icon {
-  font-size: 1.2rem;
-  margin-left: 0.5rem;
-  vertical-align: middle;
-  display: inline-block;
+  font-size: 1.1rem;
+  color: $corporate-green;
+  transition: transform 0.3s ease;
+  
+  .user-info:hover & {
+    transform: rotate(180deg);
+  }
 }
+
 .user-menu {
   position: absolute;
-  top: 2.2rem;
+  top: 3.5rem;
   right: 0;
-  background: #222;
-  color: #fff;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-  min-width: 160px;
+  background: $corporate-dark;
+  backdrop-filter: blur(10px);
+  color: $white;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba($corporate-green, 0.3);
+  min-width: 200px;
   padding: 0.5rem 0;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
+  z-index: 1000;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: 1.5rem;
+    width: 16px;
+    height: 16px;
+    background: $corporate-dark;
+    border: 1px solid rgba($corporate-green, 0.3);
+    border-bottom: none;
+    border-right: none;
+    transform: rotate(45deg);
+  }
+  
+  button {
+    background: none;
+    color: $white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    
+    &:hover {
+      background: rgba($corporate-green, 0.15);
+      color: $corporate-green;
+      padding-left: 2rem;
+    }
+  }
 }
-.user-menu button {
-  background: none;
-  color: #fff;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  text-align: left;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background 0.2s;
-}
-.user-menu button:hover {
-  background: #444;
-}
+
 .content {
   flex: 1;
   padding: 2rem;
+  background: $light-gray;
+  min-height: calc(100vh - 80px); // Adjust based on topbar height
 }
-.logout-icon {
-  font-size: 1.2rem;
-  margin-right: 0.5rem;
-  vertical-align: middle;
-  display: inline-block;
+
+// ========== RESPONSIVE ==========
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -240px;
+    height: 100vh;
+    z-index: 999;
+    transition: left 0.3s ease;
+    
+    &:not(.collapsed) {
+      left: 0;
+    }
+    
+    &.collapsed {
+      left: 0;
+      width: 60px;
+    }
+  }
+  
+  .main-content {
+    margin-left: 0;
+    
+    .sidebar.collapsed ~ & {
+      margin-left: 60px;
+    }
+  }
+  
+  .topbar {
+    padding: 1rem;
+  }
+  
+  .content {
+    padding: 1rem;
+  }
+  
+  .logo {
+    height: 35px;
+    margin-right: 1rem;
+  }
 }

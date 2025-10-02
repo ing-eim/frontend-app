@@ -1,4 +1,5 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Auth } from '../login/auth';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -12,10 +13,29 @@ import { RouterModule } from '@angular/router';
 })
 export class Dashboard {
   menuOpen = false;
-  constructor(public auth: Auth, private router: Router) {}
+  sidebarCollapsed = false;
+  
+  constructor(
+    public auth: Auth, 
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+
+    if (isPlatformBrowser(this.platformId)) {
+      const savedState = localStorage.getItem('sidebarCollapsed');
+      this.sidebarCollapsed = savedState === 'true';
+    }
+  }
 
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
+  }
+
+  toggleSidebar() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed.toString());
+    }
   }
 
   logout() {
