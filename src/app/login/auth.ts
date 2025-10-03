@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -25,7 +26,7 @@ export class Auth {
 
   // 1. Crear usuario
   createUser(nombre_usuario: string, correo_electronico: string, contrasena: string, rol_id: number, activo: boolean) {
-    return this.http.post<any>('http://127.0.0.1:8000/usuarios/', {
+    return this.http.post<any>(`${environment.apiUrl}/usuarios/`, {
       nombre_usuario,
       correo_electronico,
       contrasena,
@@ -39,7 +40,7 @@ export class Auth {
     const body = new URLSearchParams();
     body.set('username', username);
     body.set('password', password);
-    return this.http.post<any>('http://127.0.0.1:8000/token', body.toString(), {
+    return this.http.post<any>(`${environment.apiUrl}/token`, body.toString(), {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     }).pipe(
       tap(res => {
@@ -69,21 +70,21 @@ export class Auth {
 
   // 3. Listar usuarios
   listUsers() {
-    return this.http.get<any[]>('http://127.0.0.1:8000/usuarios/', {
+    return this.http.get<any[]>(`${environment.apiUrl}/usuarios/`, {
       headers: { Authorization: `Bearer ${this.token}` }
     });
   }
 
   // 4. Consultar usuario por ID
   getUser(id: number) {
-    return this.http.get<any>(`http://127.0.0.1:8000/usuarios/${id}`, {
+    return this.http.get<any>(`${environment.apiUrl}/usuarios/${id}`, {
       headers: { Authorization: `Bearer ${this.token}` }
     });
   }
 
   // 5. Actualizar usuario
   updateUser(id: number, nombre_usuario: string, correo_electronico: string, contrasena: string, rol_id: number, activo: boolean) {
-    return this.http.put<any>(`http://127.0.0.1:8000/usuarios/${id}`, {
+    return this.http.put<any>(`${environment.apiUrl}/usuarios/${id}`, {
       nombre_usuario,
       correo_electronico,
       contrasena,
@@ -96,14 +97,14 @@ export class Auth {
 
   // 6. Eliminar usuario
   deleteUser(id: number) {
-    return this.http.delete<any>(`http://127.0.0.1:8000/usuarios/${id}`, {
+    return this.http.delete<any>(`${environment.apiUrl}/usuarios/${id}`, {
       headers: { Authorization: `Bearer ${this.token}` }
     });
   }
 
   // 7. Crear rol
   createRole(nombre: string, descripcion: string) {
-    return this.http.post<any>('http://127.0.0.1:8000/roles/', {
+    return this.http.post<any>(`${environment.apiUrl}/roles/`, {
       nombre,
       descripcion
     }, {
@@ -113,14 +114,14 @@ export class Auth {
 
   // 8. Listar roles
   listRoles() {
-    return this.http.get<any[]>('http://127.0.0.1:8000/roles/', {
+    return this.http.get<any[]>(`${environment.apiUrl}/roles/`, {
       headers: { Authorization: `Bearer ${this.token}` }
     });
   }
 
   // 9. Registrar acción en bitácora
   logAction(usuario_id: number, accion: string, ip_origen: string) {
-    return this.http.post<any>('http://127.0.0.1:8000/bitacora/', {
+    return this.http.post<any>(`${environment.apiUrl}/bitacora/`, {
       usuario_id,
       accion,
       ip_origen
@@ -131,7 +132,7 @@ export class Auth {
 
   // 10. Consultar bitácora
   listBitacora(usuario_id?: number) {
-    let url = 'http://127.0.0.1:8000/bitacora/';
+    let url = `${environment.apiUrl}/bitacora/`;
     if (usuario_id) {
       url += `?usuario_id=${usuario_id}`;
     }
