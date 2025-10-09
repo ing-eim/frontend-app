@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
@@ -13,14 +13,50 @@ export class Auth {
   private nombre_usuario: string = '';
   private usuario_id: number | null = null;
   private loggedIn = false;
+  private inactivityTimeout: any = null;
+  private readonly SESSION_TIMEOUT_MINUTES = 3; // Cambia el tiempo de expiración aquí
 
-  constructor(private http: HttpClient, private router: Router) {
+  constructor(private http: HttpClient, private router: Router, private ngZone: NgZone) {
     if (typeof window !== 'undefined' && window.sessionStorage) {
       const storedToken = window.sessionStorage.getItem('token');
       if (storedToken) {
         this.token = storedToken;
         this.loggedIn = true;
+        this.startInactivityTimer();
+        this.setupActivityListeners();
       }
+    }
+  }
+
+  private startInactivityTimer() {
+    this.clearInactivityTimer();
+    this.inactivityTimeout = setTimeout(() => {
+      this.ngZone.run(() => {
+        alert('Sesión caducada por inactividad.');
+        this.logout();
+        this.router.navigate(['/login']);
+      });
+    }, this.SESSION_TIMEOUT_MINUTES * 60 * 1000);
+  }
+
+  private clearInactivityTimer() {
+    if (this.inactivityTimeout) {
+      clearTimeout(this.inactivityTimeout);
+      this.inactivityTimeout = null;
+    }
+  }
+
+  private setupActivityListeners() {
+    if (typeof window !== 'undefined') {
+      ['mousemove', 'keydown', 'click', 'scroll'].forEach(event => {
+        window.addEventListener(event, () => this.resetInactivityTimer(), true);
+      });
+    }
+  }
+
+  private resetInactivityTimer() {
+    if (this.loggedIn) {
+      this.startInactivityTimer();
     }
   }
 
@@ -52,6 +88,8 @@ export class Auth {
           if (typeof window !== 'undefined' && window.sessionStorage) {
             window.sessionStorage.setItem('token', this.token ?? '');
           }
+          this.startInactivityTimer();
+          this.setupActivityListeners();
         }
       }),
       catchError(() => of(false)),
@@ -63,6 +101,7 @@ export class Auth {
           if (typeof window !== 'undefined' && window.sessionStorage) {
             window.sessionStorage.removeItem('token');
           }
+          this.clearInactivityTimer();
         }
       })
     );
@@ -162,6 +201,10 @@ export class Auth {
     this.token = null;
     this.nombre_usuario = '';
     this.usuario_id = null;
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      window.sessionStorage.removeItem('token');
+    }
+    this.clearInactivityTimer();
     this.router.navigate(['/login']);
   }
 }
