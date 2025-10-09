@@ -14,11 +14,26 @@
             <span *ngIf="!sidebarCollapsed">Inicio</span>
           </a>
         </li>
-        <li>
-          <a routerLink="/dashboard/operaciones" routerLinkActive="active">
+        <li class="has-submenu">
+          <div class="menu-item" (click)="toggleOperacionesMenu()" [class.active]="operacionesMenuOpen">
             <i class="fas fa-cogs"></i>
             <span *ngIf="!sidebarCollapsed">Operaciones</span>
-          </a>
+            <i *ngIf="!sidebarCollapsed" class="fas fa-chevron-down submenu-arrow" [class.rotated]="operacionesMenuOpen"></i>
+          </div>
+          <ul *ngIf="operacionesMenuOpen && !sidebarCollapsed" class="submenu">
+            <li>
+              <a routerLink="/dashboard/operaciones/carga-archivos" routerLinkActive="active">
+                <i class="fas fa-upload"></i>
+                <span>Carga de Archivos</span>
+              </a>
+            </li>
+            <li>
+              <a routerLink="/dashboard/operaciones/sincronizacion" routerLinkActive="active">
+                <i class="fas fa-sync-alt"></i>
+                <span>Sincronización</span>
+              </a>
+            </li>
+          </ul>
         </li>
         <li>
           <a routerLink="/dashboard/reportes" routerLinkActive="active">

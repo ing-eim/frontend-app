@@ -14,6 +14,7 @@ import { RouterModule } from '@angular/router';
 export class Dashboard {
   menuOpen = false;
   sidebarCollapsed = false;
+  operacionesMenuOpen = false;
   
   constructor(
     public auth: Auth, 
@@ -33,8 +34,18 @@ export class Dashboard {
 
   toggleSidebar() {
     this.sidebarCollapsed = !this.sidebarCollapsed;
+    // Cerrar submenús cuando se colapsa el sidebar
+    if (this.sidebarCollapsed) {
+      this.operacionesMenuOpen = false;
+    }
     if (isPlatformBrowser(this.platformId)) {
       localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed.toString());
+    }
+  }
+
+  toggleOperacionesMenu() {
+    if (!this.sidebarCollapsed) {
+      this.operacionesMenuOpen = !this.operacionesMenuOpen;
     }
   }
 
