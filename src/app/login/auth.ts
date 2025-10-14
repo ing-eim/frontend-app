@@ -1,9 +1,10 @@
-import { Injectable, NgZone } from '@angular/core';
+import { Injectable, NgZone, PLATFORM_ID, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
@@ -14,31 +15,72 @@ export class Auth {
   private usuario_id: number | null = null;
   private loggedIn = false;
   private inactivityTimeout: any = null;
-  private readonly SESSION_TIMEOUT_MINUTES = 3; // Cambia el tiempo de expiración aquí
+  private isAutoLogoutActive: boolean = false;
+  // Tiempo de inactividad en SEGUNDOS
+  private readonly SESSION_TIMEOUT_SECONDS = 180; // 3 minutos
 
-  constructor(private http: HttpClient, private router: Router, private ngZone: NgZone) {
-    if (typeof window !== 'undefined' && window.sessionStorage) {
-      const storedToken = window.sessionStorage.getItem('token');
-      if (storedToken) {
-        this.token = storedToken;
-        this.loggedIn = true;
-        this.startInactivityTimer();
-        this.setupActivityListeners();
+  constructor(
+    private http: HttpClient, 
+    private router: Router, 
+    private ngZone: NgZone,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    // console.log('🔧 AuthService constructor ejecutado');
+    // console.log('🖥️ Plataforma:', isPlatformBrowser(this.platformId) ? 'Browser' : 'Server');
+    
+    // Solo ejecutar en el navegador, no en el servidor
+    if (isPlatformBrowser(this.platformId)) {
+      // console.log('🌐 Ejecutándose en el navegador');
+      
+      if (window.sessionStorage) {
+        // console.log('📦 SessionStorage disponible');
+        const storedToken = window.sessionStorage.getItem('token');
+        // console.log('🔍 Token en storage:', storedToken ? 'encontrado' : 'no encontrado');
+        
+        if (storedToken) {
+          // console.log('🔑 Token encontrado en sessionStorage, iniciando sistema de auto-logout');
+          this.token = storedToken;
+          this.loggedIn = true;
+          // Iniciar el sistema de auto-logout después de que el componente esté listo
+          setTimeout(() => {
+            // console.log('⏰ Iniciando sistema auto-logout desde constructor...');
+            this.startInactivityTimer();
+            this.setupActivityListeners();
+          }, 2000); // Aumenté el tiempo para asegurar que el DOM esté listo
+        } else {
+          // console.log('❌ No hay token en sessionStorage');
+        }
       }
+    } else {
+      // console.log('🖥️ Ejecutándose en el servidor (SSR) - saltando inicialización');
     }
   }
 
+  /**
+   * IMPLEMENTACIÓN SIMPLE Y DIRECTA - Timer de inactividad
+   */
   private startInactivityTimer() {
-    this.clearInactivityTimer();
+    if (!this.loggedIn) return;
+    
+    // console.log(`⏰ TIMER SIMPLE: ${this.SESSION_TIMEOUT_SECONDS} segundos`);
+    
+    // Limpiar timer anterior si existe
+    if (this.inactivityTimeout) {
+      clearTimeout(this.inactivityTimeout);
+    }
+    
+    // Crear nuevo timer
     this.inactivityTimeout = setTimeout(() => {
-      this.ngZone.run(() => {
-        alert('Sesión caducada por inactividad.');
-        this.logout();
-        this.router.navigate(['/login']);
-      });
-    }, this.SESSION_TIMEOUT_MINUTES * 60 * 1000);
+      // console.log('🚨 ¡TIMEOUT! Ejecutando auto-logout AHORA');
+      this.executeAutoLogout();
+    }, this.SESSION_TIMEOUT_SECONDS * 1000);
+    
+    // console.log('✅ Timer creado exitosamente');
   }
 
+  /**
+   * Limpia el temporizador de inactividad activo
+   */
   private clearInactivityTimer() {
     if (this.inactivityTimeout) {
       clearTimeout(this.inactivityTimeout);
@@ -46,19 +88,104 @@ export class Auth {
     }
   }
 
-  private setupActivityListeners() {
-    if (typeof window !== 'undefined') {
-      ['mousemove', 'keydown', 'click', 'scroll'].forEach(event => {
-        window.addEventListener(event, () => this.resetInactivityTimer(), true);
-      });
+  /**
+   * MÉTODO SIMPLE PARA EJECUTAR AUTO-LOGOUT
+   */
+  private executeAutoLogout() {
+    // console.log('🔥 EJECUTANDO AUTO-LOGOUT SIMPLE');
+    
+    // Mostrar alerta
+    alert('Sesión expirada por inactividad. Redirigiendo al login...');
+    
+    // Limpiar todo
+    this.loggedIn = false;
+    this.token = null;
+    this.nombre_usuario = '';
+    this.usuario_id = null;
+    
+    // Limpiar storage si estamos en navegador
+    if (isPlatformBrowser(this.platformId)) {
+      sessionStorage.removeItem('token');
     }
+    
+    // Limpiar timer
+    this.clearInactivityTimer();
+    
+    // Ir al login
+    location.href = '/login';
+    
+    // console.log('✅ AUTO-LOGOUT SIMPLE COMPLETADO');
   }
 
+  /**
+   * LISTENERS SIMPLES para detectar actividad
+   */
+  private setupActivityListeners() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    
+    console.log('� Configurando listeners simples...');
+    
+    // Función simple para reiniciar timer
+    const resetTimer = () => {
+      if (this.loggedIn) {
+        console.log('🔄 ACTIVIDAD - Reiniciando timer');
+        this.startInactivityTimer();
+      }
+    };
+    
+    // Solo eventos básicos
+    document.addEventListener('click', resetTimer);
+    document.addEventListener('keydown', resetTimer);
+    
+    console.log('✅ Listeners básicos configurados');
+  }
+
+  /**
+   * Reinicia el temporizador de inactividad cuando se detecta actividad
+   */
   private resetInactivityTimer() {
     if (this.loggedIn) {
+      console.log('🔄 Actividad detectada, reiniciando temporizador');
       this.startInactivityTimer();
     }
   }
+
+  /**
+   * Fuerza el cierre de sesión por inactividad
+   */
+  private forceAutoLogout() {
+    console.log('🚨 EJECUTANDO FORCE AUTO LOGOUT');
+    
+    // Limpiar estado inmediatamente
+    this.loggedIn = false;
+    this.token = null;
+    this.nombre_usuario = '';
+    this.usuario_id = null;
+    
+    // Limpiar sessionStorage solo en el navegador
+    if (isPlatformBrowser(this.platformId) && window.sessionStorage) {
+      window.sessionStorage.removeItem('token');
+      console.log('🧹 SessionStorage limpiado');
+    }
+    
+    // Limpiar timer
+    this.clearInactivityTimer();
+    
+    // Redirigir al login
+    try {
+      this.router.navigate(['/login']);
+      console.log('✅ Navegación con router exitosa');
+    } catch (error) {
+      console.log('⚠️ Error con router:', error);
+      if (isPlatformBrowser(this.platformId)) {
+        window.location.href = '/login';
+      }
+    }
+    
+    console.log('✅ AUTO-LOGOUT COMPLETADO');
+  }
+
+
 
   // 1. Crear usuario
   createUser(nombre_usuario: string, correo_electronico: string, contrasena: string, rol_id: number, activo: boolean) {
@@ -73,23 +200,54 @@ export class Auth {
 
   // 2. Login (obtener token)
   login(username: string, password: string): Observable<boolean> {
+    console.log('🔐 AuthService.login() llamado');
+    console.log('👤 Username:', username);
+    console.log('🌐 API URL:', environment.apiUrl);
+    
     const body = new URLSearchParams();
     body.set('username', username);
     body.set('password', password);
+    
+    console.log('📡 Enviando petición POST a:', `${environment.apiUrl}/token`);
+    
     return this.http.post<any>(`${environment.apiUrl}/token`, body.toString(), {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     }).pipe(
       tap(res => {
+        console.log('📨 Respuesta del servidor recibida:', res);
+        
         if (res && res.access_token && res.usuario_id) {
+          console.log('✅ Login exitoso, configurando sesión y temporizadores');
+          console.log('🔑 Token recibido:', res.access_token ? 'sí' : 'no');
+          console.log('👤 Usuario ID:', res.usuario_id);
+          
           this.token = res.access_token;
           this.nombre_usuario = username;
           this.usuario_id = res.usuario_id;
           this.loggedIn = true;
-          if (typeof window !== 'undefined' && window.sessionStorage) {
+          
+          if (isPlatformBrowser(this.platformId) && window.sessionStorage) {
             window.sessionStorage.setItem('token', this.token ?? '');
+            console.log('💾 Token guardado en sessionStorage');
           }
+          
+          console.log('⏰ INICIANDO SISTEMA SIMPLE DE AUTO-LOGOUT...');
+          
+          // Iniciar sistema simplificado
           this.startInactivityTimer();
           this.setupActivityListeners();
+          
+          // MÉTODO DE PRUEBA INMEDIATA - Para verificar que funciona
+          console.log('🧪 INICIANDO PRUEBA INMEDIATA EN 5 SEGUNDOS...');
+          setTimeout(() => {
+            console.log('🧪 EJECUTANDO LOGOUT DE PRUEBA AHORA');
+            this.executeAutoLogout();
+          }, 5000); // 5 segundos después del login
+        } else {
+          console.log('❌ Respuesta del servidor no válida:', {
+            access_token: res?.access_token,
+            usuario_id: res?.usuario_id
+          });
         }
       }),
       catchError(() => of(false)),
@@ -196,15 +354,27 @@ export class Auth {
     return this.loggedIn;
   }
 
+  /**
+   * Cierra la sesión del usuario y limpia todos los datos de autenticación
+   */
   logout() {
+    console.log('🚪 Ejecutando logout manual...');
     this.loggedIn = false;
     this.token = null;
     this.nombre_usuario = '';
     this.usuario_id = null;
-    if (typeof window !== 'undefined' && window.sessionStorage) {
+    
+    // Limpiar datos del navegador solo si estamos en el navegador
+    if (isPlatformBrowser(this.platformId) && window.sessionStorage) {
       window.sessionStorage.removeItem('token');
+      console.log('🧹 SessionStorage limpiado en logout manual');
     }
+    
+    // Limpiar temporizador de inactividad
     this.clearInactivityTimer();
+    
+    // Navegar al login
     this.router.navigate(['/login']);
+    console.log('✅ Logout manual completado, redirigiendo a login');
   }
 }
