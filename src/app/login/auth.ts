@@ -2,9 +2,17 @@ import { Injectable, NgZone, PLATFORM_ID, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { isPlatformBrowser } from '@angular/common';
+import { SessionExpiredService } from '../shared/session-expired.service';
+
+interface LoginResponse {
+  access_token?: string;
+  token_type?: string;
+  usuario_id?: number;
+  [key: string]: any;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -17,42 +25,30 @@ export class Auth {
   private inactivityTimeout: any = null;
   private isAutoLogoutActive: boolean = false;
   // Tiempo de inactividad en SEGUNDOS
-  private readonly SESSION_TIMEOUT_SECONDS = 180; // 3 minutos
+  private readonly SESSION_TIMEOUT_SECONDS = 10; // 3 minutos
 
   constructor(
     private http: HttpClient, 
     private router: Router, 
     private ngZone: NgZone,
+    private sessionExpiredService: SessionExpiredService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    // console.log('🔧 AuthService constructor ejecutado');
-    // console.log('🖥️ Plataforma:', isPlatformBrowser(this.platformId) ? 'Browser' : 'Server');
-    
     // Solo ejecutar en el navegador, no en el servidor
     if (isPlatformBrowser(this.platformId)) {
-      // console.log('🌐 Ejecutándose en el navegador');
-      
       if (window.sessionStorage) {
-        // console.log('📦 SessionStorage disponible');
         const storedToken = window.sessionStorage.getItem('token');
-        // console.log('🔍 Token en storage:', storedToken ? 'encontrado' : 'no encontrado');
         
         if (storedToken) {
-          // console.log('🔑 Token encontrado en sessionStorage, iniciando sistema de auto-logout');
           this.token = storedToken;
           this.loggedIn = true;
           // Iniciar el sistema de auto-logout después de que el componente esté listo
           setTimeout(() => {
-            // console.log('⏰ Iniciando sistema auto-logout desde constructor...');
             this.startInactivityTimer();
             this.setupActivityListeners();
           }, 2000); // Aumenté el tiempo para asegurar que el DOM esté listo
-        } else {
-          // console.log('❌ No hay token en sessionStorage');
         }
       }
-    } else {
-      // console.log('🖥️ Ejecutándose en el servidor (SSR) - saltando inicialización');
     }
   }
 
@@ -62,8 +58,6 @@ export class Auth {
   private startInactivityTimer() {
     if (!this.loggedIn) return;
     
-    // console.log(`⏰ TIMER SIMPLE: ${this.SESSION_TIMEOUT_SECONDS} segundos`);
-    
     // Limpiar timer anterior si existe
     if (this.inactivityTimeout) {
       clearTimeout(this.inactivityTimeout);
@@ -71,11 +65,8 @@ export class Auth {
     
     // Crear nuevo timer
     this.inactivityTimeout = setTimeout(() => {
-      // console.log('🚨 ¡TIMEOUT! Ejecutando auto-logout AHORA');
       this.executeAutoLogout();
     }, this.SESSION_TIMEOUT_SECONDS * 1000);
-    
-    // console.log('✅ Timer creado exitosamente');
   }
 
   /**
@@ -92,11 +83,99 @@ export class Auth {
    * MÉTODO SIMPLE PARA EJECUTAR AUTO-LOGOUT
    */
   private executeAutoLogout() {
-    // console.log('🔥 EJECUTANDO AUTO-LOGOUT SIMPLE');
+    // SOLUCIÓN ULTRA SIMPLE: Crear modal directamente en el DOM
+    this.createAndShowModal();
     
-    // Mostrar alerta
-    alert('Sesión expirada por inactividad. Redirigiendo al login...');
+    // Limpiar timer
+    this.clearInactivityTimer();
+  }
+
+  private createAndShowModal() {
     
+    // Crear overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'session-expired-overlay';
+    overlay.style.cssText = `
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      background-color: rgba(0, 0, 0, 0.7) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      z-index: 99999 !important;
+      font-family: Arial, sans-serif !important;
+    `;
+    
+    // Crear modal
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      background: #2a2a2a !important;
+      border-radius: 1rem !important;
+      border-top: 4px solid #388E3C !important;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4) !important;
+      min-width: 400px !important;
+      max-width: 500px !important;
+      width: 90% !important;
+      position: relative !important;
+      padding: 2rem !important;
+      text-align: center !important;
+      color: white !important;
+    `;
+    
+    modal.innerHTML = `
+      <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚠️</div>
+      <h3 style="color: white; font-size: 1.4rem; font-weight: bold; margin: 0 0 1rem 0; text-transform: uppercase;">SESIÓN EXPIRADA</h3>
+      <p style="color: white; font-size: 1rem; margin: 0.5rem 0;">Su sesión ha expirado por inactividad después de 3 minutos.</p>
+      <p style="color: #cccccc; font-size: 1rem; margin: 0.5rem 0;">Será redirigido al login automáticamente en <span id="countdown">5</span> segundos.</p>
+      <button id="login-now-btn" style="
+        background: #388E3C !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 0.6rem !important;
+        padding: 1rem 2rem !important;
+        font-size: 1rem !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+        margin-top: 1rem !important;
+        text-transform: uppercase !important;
+      ">IR AL LOGIN AHORA</button>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Configurar countdown
+    let countdown = 5;
+    const countdownElement = document.getElementById('countdown');
+    const countdownInterval = setInterval(() => {
+      countdown--;
+      if (countdownElement) {
+        countdownElement.textContent = countdown.toString();
+      }
+      
+      if (countdown <= 0) {
+        clearInterval(countdownInterval);
+        this.finalizeLogout();
+      }
+    }, 1000);
+    
+    // Configurar botón
+    const button = document.getElementById('login-now-btn');
+    if (button) {
+      button.onclick = () => {
+        clearInterval(countdownInterval);
+        this.finalizeLogout();
+      };
+    }
+    
+    console.log('🎯 Modal creada y mostrada en el DOM');
+  }
+
+  // Método público para finalizar el logout desde la modal
+  public finalizeLogout() {
     // Limpiar todo
     this.loggedIn = false;
     this.token = null;
@@ -108,13 +187,8 @@ export class Auth {
       sessionStorage.removeItem('token');
     }
     
-    // Limpiar timer
-    this.clearInactivityTimer();
-    
     // Ir al login
     location.href = '/login';
-    
-    // console.log('✅ AUTO-LOGOUT SIMPLE COMPLETADO');
   }
 
   /**
@@ -123,12 +197,9 @@ export class Auth {
   private setupActivityListeners() {
     if (!isPlatformBrowser(this.platformId)) return;
     
-    console.log('� Configurando listeners simples...');
-    
     // Función simple para reiniciar timer
     const resetTimer = () => {
       if (this.loggedIn) {
-        console.log('🔄 ACTIVIDAD - Reiniciando timer');
         this.startInactivityTimer();
       }
     };
@@ -136,8 +207,6 @@ export class Auth {
     // Solo eventos básicos
     document.addEventListener('click', resetTimer);
     document.addEventListener('keydown', resetTimer);
-    
-    console.log('✅ Listeners básicos configurados');
   }
 
   /**
@@ -145,7 +214,6 @@ export class Auth {
    */
   private resetInactivityTimer() {
     if (this.loggedIn) {
-      console.log('🔄 Actividad detectada, reiniciando temporizador');
       this.startInactivityTimer();
     }
   }
@@ -154,8 +222,6 @@ export class Auth {
    * Fuerza el cierre de sesión por inactividad
    */
   private forceAutoLogout() {
-    console.log('🚨 EJECUTANDO FORCE AUTO LOGOUT');
-    
     // Limpiar estado inmediatamente
     this.loggedIn = false;
     this.token = null;
@@ -165,7 +231,6 @@ export class Auth {
     // Limpiar sessionStorage solo en el navegador
     if (isPlatformBrowser(this.platformId) && window.sessionStorage) {
       window.sessionStorage.removeItem('token');
-      console.log('🧹 SessionStorage limpiado');
     }
     
     // Limpiar timer
@@ -174,15 +239,11 @@ export class Auth {
     // Redirigir al login
     try {
       this.router.navigate(['/login']);
-      console.log('✅ Navegación con router exitosa');
     } catch (error) {
-      console.log('⚠️ Error con router:', error);
       if (isPlatformBrowser(this.platformId)) {
         window.location.href = '/login';
       }
     }
-    
-    console.log('✅ AUTO-LOGOUT COMPLETADO');
   }
 
 
@@ -200,57 +261,35 @@ export class Auth {
 
   // 2. Login (obtener token)
   login(username: string, password: string): Observable<boolean> {
-    console.log('🔐 AuthService.login() llamado');
-    console.log('👤 Username:', username);
-    console.log('🌐 API URL:', environment.apiUrl);
-    
     const body = new URLSearchParams();
     body.set('username', username);
     body.set('password', password);
     
-    console.log('📡 Enviando petición POST a:', `${environment.apiUrl}/token`);
-    
-    return this.http.post<any>(`${environment.apiUrl}/token`, body.toString(), {
+    return this.http.post<LoginResponse>(`${environment.apiUrl}/token`, body.toString(), {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     }).pipe(
-      tap(res => {
-        console.log('📨 Respuesta del servidor recibida:', res);
-        
-        if (res && res.access_token && res.usuario_id) {
-          console.log('✅ Login exitoso, configurando sesión y temporizadores');
-          console.log('🔑 Token recibido:', res.access_token ? 'sí' : 'no');
-          console.log('👤 Usuario ID:', res.usuario_id);
-          
+      tap((res: LoginResponse) => {
+        if (res && res.access_token) {
           this.token = res.access_token;
           this.nombre_usuario = username;
-          this.usuario_id = res.usuario_id;
+          this.usuario_id = res.usuario_id || null; // Permitir que sea null si no viene en la respuesta
           this.loggedIn = true;
           
           if (isPlatformBrowser(this.platformId) && window.sessionStorage) {
             window.sessionStorage.setItem('token', this.token ?? '');
-            console.log('💾 Token guardado en sessionStorage');
           }
-          
-          console.log('⏰ INICIANDO SISTEMA SIMPLE DE AUTO-LOGOUT...');
           
           // Iniciar sistema simplificado
           this.startInactivityTimer();
           this.setupActivityListeners();
-          
-          // MÉTODO DE PRUEBA INMEDIATA - Para verificar que funciona
-          console.log('🧪 INICIANDO PRUEBA INMEDIATA EN 5 SEGUNDOS...');
-          setTimeout(() => {
-            console.log('🧪 EJECUTANDO LOGOUT DE PRUEBA AHORA');
-            this.executeAutoLogout();
-          }, 5000); // 5 segundos después del login
-        } else {
-          console.log('❌ Respuesta del servidor no válida:', {
-            access_token: res?.access_token,
-            usuario_id: res?.usuario_id
-          });
         }
       }),
-      catchError(() => of(false)),
+      map((res: LoginResponse) => {
+        return !!(res && res.access_token);
+      }),
+      catchError(() => {
+        return of(false);
+      }),
       tap(success => {
         if (!success) {
           this.loggedIn = false;
@@ -358,7 +397,6 @@ export class Auth {
    * Cierra la sesión del usuario y limpia todos los datos de autenticación
    */
   logout() {
-    console.log('🚪 Ejecutando logout manual...');
     this.loggedIn = false;
     this.token = null;
     this.nombre_usuario = '';
@@ -367,7 +405,6 @@ export class Auth {
     // Limpiar datos del navegador solo si estamos en el navegador
     if (isPlatformBrowser(this.platformId) && window.sessionStorage) {
       window.sessionStorage.removeItem('token');
-      console.log('🧹 SessionStorage limpiado en logout manual');
     }
     
     // Limpiar temporizador de inactividad
@@ -375,6 +412,5 @@ export class Auth {
     
     // Navegar al login
     this.router.navigate(['/login']);
-    console.log('✅ Logout manual completado, redirigiendo a login');
   }
 }

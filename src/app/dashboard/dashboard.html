@@ -73,7 +73,27 @@
       </div>
     </header>
     <section class="content">
+
       <router-outlet></router-outlet>
     </section>
+  </div>
+</div>
+
+<!-- Modal de Sesión Expirada -->
+<div [style.display]="showSessionExpiredModal ? 'flex' : 'none'" class="session-expired-overlay">
+  <div class="session-expired-modal">
+    <div class="modal-header">
+      <div class="warning-icon">⚠️</div>
+      <h3>Sesión Expirada</h3>
+    </div>
+    <div class="modal-body">
+      <p>Su sesión ha expirado por inactividad después de 3 minutos.</p>
+      <p>Será redirigido al login automáticamente en <strong>{{ countdown }}</strong> segundos.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn" (click)="closeSessionExpiredModal()">
+        Ir al Login Ahora
+      </button>
+    </div>
   </div>
 </div>
