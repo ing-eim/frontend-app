@@ -25,7 +25,7 @@ export class Auth {
   private inactivityTimeout: any = null;
   private isAutoLogoutActive: boolean = false;
   // Tiempo de inactividad en SEGUNDOS
-  private readonly SESSION_TIMEOUT_SECONDS = 10; // 3 minutos
+  private readonly SESSION_TIMEOUT_SECONDS = 180; // 3 minutos
 
   constructor(
     private http: HttpClient, 
