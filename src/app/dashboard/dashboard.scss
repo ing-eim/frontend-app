@@ -348,6 +348,12 @@ $light-gray: #f0f0f0;
   }
 }
 
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .user-info {
   display: flex;
   align-items: center;
@@ -606,5 +612,215 @@ $light-gray: #f0f0f0;
   .modal-footer {
     padding-left: 1.5rem;
     padding-right: 1.5rem;
+  }
+}
+
+// ========== NOTIFICACIONES EN TOPBAR ==========
+.topbar-notifications {
+  position: relative;
+
+  .notifications-btn {
+    background: transparent;
+    border: none;
+    color: $white;
+    cursor: pointer;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    font-size: 1.2rem;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: $corporate-green;
+    }
+
+    .notifications-badge {
+      position: absolute;
+      top: 0.25rem;
+      right: 0.25rem;
+      background: #ff4444;
+      color: $white;
+      border-radius: 50%;
+      min-width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: bold;
+      animation: pulse 2s infinite;
+    }
+  }
+
+  .notifications-dropdown {
+    position: relative;
+
+    .notifications-menu {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      width: 380px;
+      max-width: 90vw;
+      background: $corporate-dark;
+      border: 1px solid $corporate-gray;
+      border-radius: 0.5rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      animation: slideDown 0.3s ease-out;
+
+      .notifications-header {
+        padding: 1rem;
+        border-bottom: 1px solid $corporate-gray;
+        background: $corporate-green;
+        border-radius: 0.5rem 0.5rem 0 0;
+
+        h4 {
+          margin: 0;
+          color: $white;
+          font-size: 1rem;
+          font-weight: bold;
+        }
+
+        .notifications-count {
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 0.85rem;
+          margin-top: 0.25rem;
+        }
+      }
+
+      .notifications-list {
+        max-height: 400px;
+        overflow-y: auto;
+
+        .notification-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.75rem;
+          padding: 1rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          transition: background-color 0.3s ease;
+          cursor: pointer;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.05);
+          }
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          &.urgent {
+            background: rgba(255, 68, 68, 0.1);
+            border-left: 4px solid #ff4444;
+
+            .notification-icon i {
+              color: #ff4444;
+            }
+          }
+
+          &.warning {
+            background: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ffc107;
+
+            .notification-icon i {
+              color: #ffc107;
+            }
+          }
+
+          .notification-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(56, 142, 60, 0.2);
+            flex-shrink: 0;
+
+            i {
+              font-size: 1rem;
+              color: $corporate-green;
+            }
+          }
+
+          .notification-content {
+            flex: 1;
+
+            .notification-title {
+              font-weight: bold;
+              font-size: 0.9rem;
+              margin-bottom: 0.25rem;
+              color: $white;
+            }
+
+            .notification-message {
+              font-size: 0.8rem;
+              color: #cccccc;
+              margin-bottom: 0.25rem;
+              line-height: 1.4;
+            }
+
+            .notification-date {
+              font-size: 0.75rem;
+              color: #999999;
+            }
+          }
+        }
+
+        .no-notifications {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+          text-align: center;
+          color: #999999;
+
+          i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: $corporate-green;
+          }
+
+          span {
+            font-size: 0.9rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive para notificaciones
+@media (max-width: 480px) {
+  .topbar-notifications {
+    .notifications-dropdown .notifications-menu {
+      width: 320px;
+      right: -1rem;
+    }
   }
 }
