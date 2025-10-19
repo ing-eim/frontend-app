@@ -1,7 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { LoadingService } from '../../../app/shared/loading.service';
+import { ExcelResultService } from '../../../app/shared/excel-result.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-operaciones',
@@ -14,7 +17,7 @@ export class Operaciones {
   uploadMessage: string = '';
   excelData: any = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private loading: LoadingService, private excelResult: ExcelResultService, private router: Router, private cdr: ChangeDetectorRef) {}
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -28,13 +31,36 @@ export class Operaciones {
     if (this.selectedFile) {
       const formData = new FormData();
       formData.append('file', this.selectedFile);
+  // Mostrar spinner global. Auto-hide tras 20 segundos si nadie lo oculta.
+  this.loading.show(20000);
+
       this.http.post<any>(`${environment.apiUrl}/procesar-excel`, formData).subscribe({
         next: (data) => {
-          this.excelData = data;
-          this.uploadMessage = 'Archivo procesado correctamente.';
+          console.log('[Operaciones] upload success, received data:', data);
+          // Defer UI updates to next macrotask to avoid ExpressionChangedAfterItHasBeenCheckedError
+          setTimeout(() => {
+            console.log('[Operaciones] applying UI updates (setTimeout)');
+            this.excelData = data;
+            this.uploadMessage = 'Archivo procesado correctamente.';
+            // Publicar resultado para que el Dashboard lo capture y oculte el spinner cuando pinte
+            this.excelResult.set(data);
+            // Navegar al dashboard para que el usuario vea el resultado
+            try {
+              this.router.navigate(['/dashboard']);
+            } catch (e) {
+              // noop
+            }
+            try { this.cdr.detectChanges(); } catch (err) { /* noop */ }
+          }, 0);
         },
         error: () => {
-          this.uploadMessage = 'Error al procesar el archivo.';
+          console.log('[Operaciones] upload error');
+          setTimeout(() => {
+            this.uploadMessage = 'Error al procesar el archivo.';
+            // En caso de error también ocultamos el spinner
+            this.loading.hide();
+            try { this.cdr.detectChanges(); } catch (err) { /* noop */ }
+          }, 0);
         }
       });
     }

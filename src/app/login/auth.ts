@@ -23,9 +23,14 @@ export class Auth {
   private usuario_id: number | null = null;
   private loggedIn = false;
   private inactivityTimeout: any = null;
+  // Elementos/intervalos del modal de sesión expirado para poder limpiarlos
+  private sessionModalOverlay: HTMLElement | null = null;
+  private sessionModalInterval: any = null;
+  private sessionModalCountdownElement: HTMLElement | null = null;
   private isAutoLogoutActive: boolean = false;
+  private activityListenersAttached: boolean = false;
   // Tiempo de inactividad en SEGUNDOS
-  private readonly SESSION_TIMEOUT_SECONDS = 180; // 3 minutos
+  private readonly SESSION_TIMEOUT_SECONDS = 30; // 3 minutos
 
   constructor(
     private http: HttpClient, 
@@ -40,6 +45,7 @@ export class Auth {
         const storedToken = window.sessionStorage.getItem('token');
         
         if (storedToken) {
+          console.log('[Auth] constructor - token found in sessionStorage');
           this.token = storedToken;
           this.loggedIn = true;
           // Iniciar el sistema de auto-logout después de que el componente esté listo
@@ -49,6 +55,24 @@ export class Auth {
           }, 2000); // Aumenté el tiempo para asegurar que el DOM esté listo
         }
       }
+    }
+
+    // Attach global listener so service can trigger logout even if modal handles countdown
+    if (isPlatformBrowser(this.platformId)) {
+      try {
+        window.addEventListener('app:sessionExpired', this.handleGlobalSessionExpired as EventListener);
+      } catch (e) {
+        // noop
+      }
+    }
+  }
+
+  private handleGlobalSessionExpired = (ev: Event) => {
+    console.log('[Auth] global sessionExpired event received');
+    try {
+      this.finalizeLogout();
+    } catch (e) {
+      // noop
     }
   }
 
@@ -64,7 +88,9 @@ export class Auth {
     }
     
     // Crear nuevo timer
+    console.log('[Auth] startInactivityTimer - setting timeout for', this.SESSION_TIMEOUT_SECONDS, 'seconds');
     this.inactivityTimeout = setTimeout(() => {
+      console.log('[Auth] inactivity timer expired -> executeAutoLogout');
       this.executeAutoLogout();
     }, this.SESSION_TIMEOUT_SECONDS * 1000);
   }
@@ -74,6 +100,7 @@ export class Auth {
    */
   private clearInactivityTimer() {
     if (this.inactivityTimeout) {
+      console.log('[Auth] clearInactivityTimer');
       clearTimeout(this.inactivityTimeout);
       this.inactivityTimeout = null;
     }
@@ -83,96 +110,31 @@ export class Auth {
    * MÉTODO SIMPLE PARA EJECUTAR AUTO-LOGOUT
    */
   private executeAutoLogout() {
-    // SOLUCIÓN ULTRA SIMPLE: Crear modal directamente en el DOM
-    this.createAndShowModal();
-    
+    // Si estamos en servidor, no podemos manipular el DOM: forzamos el logout
+    if (!isPlatformBrowser(this.platformId)) {
+      this.forceAutoLogout();
+      return;
+    }
+
+    // Mostrar modal/component Angular de sesión expirada (si estamos en navegador)
+    if (isPlatformBrowser(this.platformId)) {
+      try {
+        this.sessionExpiredService.show(5);
+      } catch (e) {
+        // fallback a logout
+        this.forceAutoLogout();
+        return;
+      }
+    } else {
+      this.forceAutoLogout();
+      return;
+    }
+
     // Limpiar timer
     this.clearInactivityTimer();
   }
 
-  private createAndShowModal() {
-    
-    // Crear overlay
-    const overlay = document.createElement('div');
-    overlay.id = 'session-expired-overlay';
-    overlay.style.cssText = `
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-      background-color: rgba(0, 0, 0, 0.7) !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      z-index: 99999 !important;
-      font-family: Arial, sans-serif !important;
-    `;
-    
-    // Crear modal
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-      background: #2a2a2a !important;
-      border-radius: 1rem !important;
-      border-top: 4px solid #388E3C !important;
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4) !important;
-      min-width: 400px !important;
-      max-width: 500px !important;
-      width: 90% !important;
-      position: relative !important;
-      padding: 2rem !important;
-      text-align: center !important;
-      color: white !important;
-    `;
-    
-    modal.innerHTML = `
-      <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚠️</div>
-      <h3 style="color: white; font-size: 1.4rem; font-weight: bold; margin: 0 0 1rem 0; text-transform: uppercase;">SESIÓN EXPIRADA</h3>
-      <p style="color: white; font-size: 1rem; margin: 0.5rem 0;">Su sesión ha expirado por inactividad después de 3 minutos.</p>
-      <p style="color: #cccccc; font-size: 1rem; margin: 0.5rem 0;">Será redirigido al login automáticamente en <span id="countdown">5</span> segundos.</p>
-      <button id="login-now-btn" style="
-        background: #388E3C !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 0.6rem !important;
-        padding: 1rem 2rem !important;
-        font-size: 1rem !important;
-        font-weight: bold !important;
-        cursor: pointer !important;
-        margin-top: 1rem !important;
-        text-transform: uppercase !important;
-      ">IR AL LOGIN AHORA</button>
-    `;
-    
-    overlay.appendChild(modal);
-    document.body.appendChild(overlay);
-    
-    // Configurar countdown
-    let countdown = 5;
-    const countdownElement = document.getElementById('countdown');
-    const countdownInterval = setInterval(() => {
-      countdown--;
-      if (countdownElement) {
-        countdownElement.textContent = countdown.toString();
-      }
-      
-      if (countdown <= 0) {
-        clearInterval(countdownInterval);
-        this.finalizeLogout();
-      }
-    }, 1000);
-    
-    // Configurar botón
-    const button = document.getElementById('login-now-btn');
-    if (button) {
-      button.onclick = () => {
-        clearInterval(countdownInterval);
-        this.finalizeLogout();
-      };
-    }
-    
-    console.log('🎯 Modal creada y mostrada en el DOM');
-  }
+  // Modal DOM creation removed: we now rely on SessionExpiredService + component
 
   // Método público para finalizar el logout desde la modal
   public finalizeLogout() {
@@ -182,13 +144,50 @@ export class Auth {
     this.nombre_usuario = '';
     this.usuario_id = null;
     
+    // Limpiar modal si está presente
+    this.clearSessionModal();
+
     // Limpiar storage si estamos en navegador
     if (isPlatformBrowser(this.platformId)) {
-      sessionStorage.removeItem('token');
+      try {
+        sessionStorage.removeItem('token');
+      } catch (e) {
+        // noop
+      }
+
+      // Ir al login usando el router si está disponible
+      try {
+        this.router.navigate(['/login']);
+        return;
+      } catch (e) {
+        // fallback
+        try {
+          (window as any).location.href = '/login';
+        } catch (err) {
+          // noop
+        }
+      }
     }
-    
-    // Ir al login
-    location.href = '/login';
+
+    // remove global listener
+    if (isPlatformBrowser(this.platformId)) {
+      try { window.removeEventListener('app:sessionExpired', this.handleGlobalSessionExpired as EventListener); } catch (e) { /* noop */ }
+    }
+  }
+
+  // Limpia el modal de sesión expirado si existe (overlay e interval)
+  private clearSessionModal() {
+    // We don't manage DOM modal here anymore; nothing to do.
+    try {
+      if (this.sessionModalInterval) {
+        clearInterval(this.sessionModalInterval);
+      }
+    } catch (e) {
+      // noop
+    }
+    this.sessionModalInterval = null;
+    this.sessionModalOverlay = null;
+    this.sessionModalCountdownElement = null;
   }
 
   /**
@@ -196,17 +195,25 @@ export class Auth {
    */
   private setupActivityListeners() {
     if (!isPlatformBrowser(this.platformId)) return;
-    
+
+    if (this.activityListenersAttached) {
+      console.log('[Auth] setupActivityListeners - already attached, skipping');
+      return;
+    }
+
     // Función simple para reiniciar timer
-    const resetTimer = () => {
+    const resetTimer = (ev?: Event) => {
+      console.log('[Auth] activity detected:', ev?.type || 'unknown');
       if (this.loggedIn) {
         this.startInactivityTimer();
       }
     };
-    
+
     // Solo eventos básicos
     document.addEventListener('click', resetTimer);
     document.addEventListener('keydown', resetTimer);
+    this.activityListenersAttached = true;
+    console.log('[Auth] setupActivityListeners - listeners attached');
   }
 
   /**
@@ -229,20 +236,36 @@ export class Auth {
     this.usuario_id = null;
     
     // Limpiar sessionStorage solo en el navegador
-    if (isPlatformBrowser(this.platformId) && window.sessionStorage) {
-      window.sessionStorage.removeItem('token');
+    if (isPlatformBrowser(this.platformId)) {
+      try {
+        sessionStorage.removeItem('token');
+      } catch (e) {
+        // noop
+      }
     }
     
     // Limpiar timer
     this.clearInactivityTimer();
     
+    // Limpiar modal si existe
+    this.clearSessionModal();
+
     // Redirigir al login
     try {
       this.router.navigate(['/login']);
     } catch (error) {
       if (isPlatformBrowser(this.platformId)) {
-        window.location.href = '/login';
+        try {
+          (window as any).location.href = '/login';
+        } catch (e) {
+          // noop
+        }
       }
+    }
+
+    // remove global listener
+    if (isPlatformBrowser(this.platformId)) {
+      try { window.removeEventListener('app:sessionExpired', this.handleGlobalSessionExpired as EventListener); } catch (e) { /* noop */ }
     }
   }
 
@@ -306,16 +329,12 @@ export class Auth {
 
   // 3. Listar usuarios
   listUsers() {
-    return this.http.get<any[]>(`${environment.apiUrl}/usuarios/`, {
-      headers: { Authorization: `Bearer ${this.token}` }
-    });
+    return this.http.get<any[]>(`${environment.apiUrl}/usuarios/`);
   }
 
   // 4. Consultar usuario por ID
   getUser(id: number) {
-    return this.http.get<any>(`${environment.apiUrl}/usuarios/${id}`, {
-      headers: { Authorization: `Bearer ${this.token}` }
-    });
+    return this.http.get<any>(`${environment.apiUrl}/usuarios/${id}`);
   }
 
   // 5. Actualizar usuario
@@ -326,16 +345,12 @@ export class Auth {
       contrasena,
       rol_id,
       activo
-    }, {
-      headers: { Authorization: `Bearer ${this.token}` }
     });
   }
 
   // 6. Eliminar usuario
   deleteUser(id: number) {
-    return this.http.delete<any>(`${environment.apiUrl}/usuarios/${id}`, {
-      headers: { Authorization: `Bearer ${this.token}` }
-    });
+    return this.http.delete<any>(`${environment.apiUrl}/usuarios/${id}`);
   }
 
   // 7. Crear rol
@@ -343,16 +358,12 @@ export class Auth {
     return this.http.post<any>(`${environment.apiUrl}/roles/`, {
       nombre,
       descripcion
-    }, {
-      headers: { Authorization: `Bearer ${this.token}` }
     });
   }
 
   // 8. Listar roles
   listRoles() {
-    return this.http.get<any[]>(`${environment.apiUrl}/roles/`, {
-      headers: { Authorization: `Bearer ${this.token}` }
-    });
+    return this.http.get<any[]>(`${environment.apiUrl}/roles/`);
   }
 
   // 9. Registrar acción en bitácora
@@ -361,8 +372,6 @@ export class Auth {
       usuario_id,
       accion,
       ip_origen
-    }, {
-      headers: { Authorization: `Bearer ${this.token}` }
     });
   }
 
@@ -372,9 +381,7 @@ export class Auth {
     if (usuario_id) {
       url += `?usuario_id=${usuario_id}`;
     }
-    return this.http.get<any[]>(url, {
-      headers: { Authorization: `Bearer ${this.token}` }
-    });
+    return this.http.get<any[]>(url);
   }
 
   getToken(): string | null {
@@ -410,6 +417,9 @@ export class Auth {
     // Limpiar temporizador de inactividad
     this.clearInactivityTimer();
     
+    // Limpiar modal si existe
+    this.clearSessionModal();
+
     // Navegar al login
     this.router.navigate(['/login']);
   }

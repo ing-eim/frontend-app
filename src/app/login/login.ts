@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, Inject, PLATFORM_ID } from '@angular/core';
 import { Auth } from './auth';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { isPlatformBrowser } from '@angular/common';
 
 @Component({
   selector: 'app-login',
@@ -18,7 +19,7 @@ export class Login {
   showSessionExpiredModal: boolean = false;
   countdown: number = 5;
 
-  constructor(private auth: Auth, private router: Router) {
+  constructor(private auth: Auth, private router: Router, @Inject(PLATFORM_ID) private platformId: Object) {
     // console.log('🏗️ Login component constructor ejecutado');
   }
 
@@ -73,8 +74,10 @@ export class Login {
   startAutoLogoutFromComponent() {
     // console.log('⏰ Sistema de auto-logout iniciado (10 segundos de inactividad para testing)');
     
-    // Configurar listeners de actividad
-    this.setupActivityListeners();
+    // Configurar listeners de actividad (solo en navegador)
+    if (isPlatformBrowser(this.platformId)) {
+      this.setupActivityListeners();
+    }
     
     // Iniciar timer
     this.startLogoutTimer();
@@ -121,20 +124,24 @@ export class Login {
 
     // Agregar listeners para detectar actividad
     this.activityListeners = [resetTimer, resetTimer, resetTimer, resetTimer, resetTimer];
-    document.addEventListener('mousedown', resetTimer);
-    document.addEventListener('mousemove', resetTimer);
-    document.addEventListener('keypress', resetTimer);
-    document.addEventListener('scroll', resetTimer);
-    document.addEventListener('click', resetTimer);
+    if (isPlatformBrowser(this.platformId)) {
+      document.addEventListener('mousedown', resetTimer);
+      document.addEventListener('mousemove', resetTimer);
+      document.addEventListener('keypress', resetTimer);
+      document.addEventListener('scroll', resetTimer);
+      document.addEventListener('click', resetTimer);
+    }
   }
 
   private removeActivityListeners() {
     if (this.activityListeners.length > 0) {
-      document.removeEventListener('mousedown', this.activityListeners[0]);
-      document.removeEventListener('mousemove', this.activityListeners[1]);
-      document.removeEventListener('keypress', this.activityListeners[2]);
-      document.removeEventListener('scroll', this.activityListeners[3]);
-      document.removeEventListener('click', this.activityListeners[4]);
+      if (isPlatformBrowser(this.platformId)) {
+        document.removeEventListener('mousedown', this.activityListeners[0]);
+        document.removeEventListener('mousemove', this.activityListeners[1]);
+        document.removeEventListener('keypress', this.activityListeners[2]);
+        document.removeEventListener('scroll', this.activityListeners[3]);
+        document.removeEventListener('click', this.activityListeners[4]);
+      }
       this.activityListeners = [];
     }
   }
@@ -151,10 +158,18 @@ export class Login {
     this.removeActivityListeners();
     
     // Limpiar sessionStorage
-    sessionStorage.removeItem('token');
-    
-    // Redirigir al login
-    window.location.href = '/login';
+    if (isPlatformBrowser(this.platformId)) {
+      try {
+        sessionStorage.removeItem('token');
+      } catch (e) {
+        // noop
+      }
+      try {
+        window.location.href = '/login';
+      } catch (e) {
+        // noop
+      }
+    }
   }
 
   private startCountdown() {
