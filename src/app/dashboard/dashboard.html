@@ -14,6 +14,7 @@
             <span *ngIf="!sidebarCollapsed">Inicio</span>
           </a>
         </li>
+
         <li class="has-submenu">
           <div class="menu-item" (click)="toggleOperacionesMenu()" [class.active]="operacionesMenuOpen">
             <i class="fas fa-cogs"></i>
@@ -35,18 +36,21 @@
             </li>
           </ul>
         </li>
+
         <li>
           <a routerLink="/dashboard/reportes" routerLinkActive="active">
             <i class="fas fa-chart-bar"></i>
             <span *ngIf="!sidebarCollapsed">Reportes</span>
           </a>
         </li>
+
         <li>
           <a routerLink="/dashboard/usuarios" routerLinkActive="active">
             <i class="fas fa-users"></i>
             <span *ngIf="!sidebarCollapsed">Usuarios</span>
           </a>
         </li>
+
         <li>
           <button (click)="logout()" class="logout-btn">
             <i class="fas fa-sign-out-alt"></i>
@@ -65,15 +69,15 @@
           <!-- Panel de Notificaciones en el Topbar -->
           <div class="topbar-notifications">
             <div class="notifications-dropdown" [class.open]="notificationsOpen">
-              <button class="notifications-btn" (click)="toggleNotifications()" type="button">
+                <button class="notifications-btn" (click)="toggleNotifications()" type="button">
                 <i class="fas fa-bell"></i>
-                <span class="notifications-badge" *ngIf="pendingNotifications.length > 0">{{pendingNotifications.length}}</span>
+                <span class="notifications-badge" *ngIf="hasNotifications">{{notificationsCount}}</span>
               </button>
               
               <div class="notifications-menu" *ngIf="notificationsOpen">
                 <div class="notifications-header">
                   <h4>Notificaciones</h4>
-                  <span class="notifications-count">{{pendingNotifications.length}} pendientes</span>
+                  <span class="notifications-count">{{notificationsCount}} pendientes</span>
                 </div>
                 <div class="notifications-list">
                   <div class="notification-item" 
@@ -91,7 +95,7 @@
                       <div class="notification-date">{{notification.dueDate}}</div>
                     </div>
                   </div>
-                  <div class="no-notifications" *ngIf="pendingNotifications.length === 0">
+                  <div class="no-notifications" *ngIf="!hasNotifications">
                     <i class="fas fa-check-circle"></i>
                     <span>No hay notificaciones pendientes</span>
                   </div>
@@ -126,21 +130,4 @@
   </div>
 </div>
 
-<!-- Modal de Sesión Expirada -->
-<div [style.display]="showSessionExpiredModal ? 'flex' : 'none'" class="session-expired-overlay">
-  <div class="session-expired-modal">
-    <div class="modal-header">
-      <div class="warning-icon">⚠️</div>
-      <h3>Sesión Expirada</h3>
-    </div>
-    <div class="modal-body">
-      <p>Su sesión ha expirado por inactividad después de 3 minutos.</p>
-      <p>Será redirigido al login automáticamente en <strong>{{ countdown }}</strong> segundos.</p>
-    </div>
-    <div class="modal-footer">
-      <button class="modal-btn" (click)="closeSessionExpiredModal()">
-        Ir al Login Ahora
-      </button>
-    </div>
-  </div>
-</div>
+<!-- SessionExpiredModal is mounted at app root; Dashboard does not render it here -->

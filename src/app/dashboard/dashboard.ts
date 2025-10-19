@@ -24,13 +24,15 @@ export class Dashboard implements OnInit, OnDestroy {
   operacionesMenuOpen = false;
   
   // MODAL DE SESIÓN EXPIRADA
-  showSessionExpiredModal: boolean = false;
-  countdown: number = 5;
+  // Session modal is handled by SessionExpiredModal component and SessionExpiredService
   private sessionExpiredSubscription: Subscription = new Subscription();
   
   // SISTEMA DE NOTIFICACIONES
   notificationsOpen = false;
   pendingNotifications: NotificationItem[] = [];
+  // derived notification UI fields to avoid binding directly to array.length which may change
+  notificationsCount = 0;
+  hasNotifications = false;
   // Si el dashboard debe mostrar datos del excel procesado
   excelDataFromUpload: any = null;
   
@@ -64,10 +66,9 @@ export class Dashboard implements OnInit, OnDestroy {
     if (isPlatformBrowser(this.platformId)) {
       const savedState = localStorage.getItem('sidebarCollapsed');
       this.sidebarCollapsed = savedState === 'true';
-      
-      // Suscribirse al servicio de sesión expirada
-      this.setupSessionExpiredSubscription();
     }
+
+    // SessionExpiredModal reads SessionExpiredService directly; Dashboard does not mirror modal state
     // React to results (ExcelResultService uses a signal)
     // effect must be created in an injection context (constructor/factory/field)
     try {
@@ -111,10 +112,12 @@ export class Dashboard implements OnInit, OnDestroy {
   ngOnInit() {
     // Intentar cargar el cronograma desde la API y luego generar notificaciones
     try {
-      this.fetchScheduleFromServer().then(() => this.loadNotifications()).catch(() => this.loadNotifications());
+      this.fetchScheduleFromServer()
+        .then(() => setTimeout(() => this.loadNotifications(), 0))
+        .catch(() => setTimeout(() => this.loadNotifications(), 0));
     } catch (e) {
       // En prerender o si algo falla, usar fallback de notificaciones
-      this.loadNotifications();
+      setTimeout(() => this.loadNotifications(), 0);
     }
 
     // ngOnInit used only for async startup tasks (fetchScheduleFromServer handled above)
@@ -146,36 +149,16 @@ export class Dashboard implements OnInit, OnDestroy {
     this.scheduleData = this.DEFAULT_SCHEDULE.slice();
   }
 
-  // Configurar función global para mostrar modal
-  private setupSessionExpiredSubscription() {
-    if (!isPlatformBrowser(this.platformId)) return;
-
-    // Crear función global que puede ser llamada desde cualquier lugar
-    (window as any).showSessionExpiredModal = () => {
-      // Mostrar modal
-      this.showSessionExpiredModal = true;
-      this.countdown = 5;
-      
-      // Iniciar cuenta regresiva
-      this.startCountdown();
-    };
-  }
+  // (session-expired modal is handled by SessionExpiredService + effect in constructor)
 
   ngOnDestroy() {
     // Limpiar subscripción
     if (this.sessionExpiredSubscription) {
       this.sessionExpiredSubscription.unsubscribe();
     }
-    
-    // Limpiar función global (solo si estamos en navegador)
-    if (isPlatformBrowser(this.platformId)) {
-      try {
-        delete (window as any).showSessionExpiredModal;
-      } catch (e) {
-        // noop
-      }
 
-      // Remove manual document listener if attached
+    // Remove manual document listener if attached (browser only)
+    if (isPlatformBrowser(this.platformId)) {
       try {
         const handler = (this as any).__docClickHandler as EventListener | undefined;
         if (handler) {
@@ -228,30 +211,13 @@ export class Dashboard implements OnInit, OnDestroy {
 
 
   closeSessionExpiredModal() {
-    this.showSessionExpiredModal = false;
-    
-    // Usar el método del auth service para finalizar el logout
-    this.auth.finalizeLogout();
-  }
-
-  // MÉTODO DE PRUEBA PARA LA MODAL
-  testModal() {
-    this.showSessionExpiredModal = true;
-    this.countdown = 30;
-    this.startCountdown();
-  }
-
-  private startCountdown() {
-    const countdownInterval = setInterval(() => {
-      this.countdown--;
-      
-      if (this.countdown <= 0) {
-        clearInterval(countdownInterval);
-        if (this.showSessionExpiredModal) {
-          this.closeSessionExpiredModal();
-        }
-      }
-    }, 1000);
+    // Delegate the finalization to the SessionExpiredService so it can clear intervals, dispatch events and navigate
+    try {
+      this.sessionExpiredService.finalizeLogout();
+    } catch (e) {
+      // fallback to auth if service call fails
+      try { this.auth.finalizeLogout(); } catch (err) { /* noop */ }
+    }
   }
 
   // MÉTODOS PARA EL SISTEMA DE NOTIFICACIONES
@@ -260,7 +226,14 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   loadNotifications() {
-    this.pendingNotifications = this.generateNotifications();
+    // assign notifications and update derived fields in next macrotask to avoid ExpressionChanged errors
+    const items = this.generateNotifications();
+    setTimeout(() => {
+      this.pendingNotifications = items;
+      this.notificationsCount = items.length;
+      this.hasNotifications = items.length > 0;
+      try { this.cdr.detectChanges(); } catch (e) { /* noop */ }
+    }, 0);
   }
 
   private generateNotifications(): NotificationItem[] {

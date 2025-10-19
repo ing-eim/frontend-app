@@ -2,11 +2,12 @@ import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Auth } from './login/auth';
 import { GlobalSpinner } from './shared/global-spinner.component';
+import { SessionExpiredModal } from './shared/session-expired-modal.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, GlobalSpinner],
+  imports: [RouterOutlet, GlobalSpinner, SessionExpiredModal],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
