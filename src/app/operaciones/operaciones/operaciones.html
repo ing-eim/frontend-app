@@ -6,7 +6,24 @@
   </form>
   <div *ngIf="uploadMessage" class="upload-message">{{ uploadMessage }}</div>
 </div>
-<div *ngIf="excelData">
-  <h3>Datos del Excel procesado:</h3>
-  <pre>{{ excelData | json }}</pre>
+<!-- Resultado del Excel procesado (display only in this component) -->
+<div *ngIf="excelData" class="excel-result">
+  <div class="excel-card">
+    <div class="excel-card-header">
+      <h3>Resultado Procesado</h3>
+      <button class="details-btn" type="button" (click)="toggleExcelDetails()">{{ showExcelDetails ? 'Ocultar detalles' : 'Ver detalles' }}</button>
+    </div>
+
+    <div class="excel-card-body">
+      <div class="metric">
+        <div class="metric-label">Filas Procesadas</div>
+        <div class="metric-value">{{ excelData.rows_read ?? (excelData.rows ?? excelData.length ?? 'N/D') }}</div>
+      </div>
+      <div class="metric-meta">Fecha: {{ excelProcessedAt ? (excelProcessedAt | date:'short') : 'N/D' }}</div>
+    </div>
+
+    <div class="excel-card-footer" *ngIf="showExcelDetails">
+      <pre class="excel-json">{{ excelData | json }}</pre>
+    </div>
+  </div>
 </div>

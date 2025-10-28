@@ -122,11 +122,7 @@
 
       <router-outlet></router-outlet>
 
-      <!-- Resultado del Excel procesado -->
-      <div *ngIf="excelDataFromUpload" class="excel-result">
-        <h3>Resultado Procesado</h3>
-        <pre>{{ excelDataFromUpload | json }}</pre>
-      </div>
+      <!-- Resultado del Excel procesado moved to Operaciones component -->
     </section>
   </div>
 </div>

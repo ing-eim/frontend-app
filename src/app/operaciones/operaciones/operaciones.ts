@@ -3,8 +3,6 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { LoadingService } from '../../../app/shared/loading.service';
-import { ExcelResultService } from '../../../app/shared/excel-result.service';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-operaciones',
@@ -16,8 +14,10 @@ export class Operaciones {
   selectedFile: File | null = null;
   uploadMessage: string = '';
   excelData: any = null;
+  showExcelDetails = false;
+  excelProcessedAt: Date | null = null;
 
-  constructor(private http: HttpClient, private loading: LoadingService, private excelResult: ExcelResultService, private router: Router, private cdr: ChangeDetectorRef) {}
+  constructor(private http: HttpClient, private loading: LoadingService, private cdr: ChangeDetectorRef) {}
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -40,20 +40,33 @@ export class Operaciones {
           // resp is HttpResponse<any>
           if (resp && resp.status === 200) {
             const data = resp.body;
-            console.log('[Operaciones] upload success, received data:', data);
             // Defer UI updates to next macrotask to avoid ExpressionChangedAfterItHasBeenCheckedError
             setTimeout(() => {
-              console.log('[Operaciones] applying UI updates (setTimeout)');
               this.excelData = data;
               this.uploadMessage = 'Archivo procesado correctamente.';
-              // Publicar resultado para que el Dashboard lo capture y oculte el spinner cuando pinte
-              this.excelResult.set(data);
-              // Navegar al dashboard para que el usuario vea el resultado
+              // Compute a displayable processed-at date. Prefer backend fields; fallback to now.
               try {
-                this.router.navigate(['/dashboard']);
+                if (data.processed_at) {
+                  this.excelProcessedAt = new Date(data.processed_at);
+                } else if (data.timestamp) {
+                  const ts = data.timestamp;
+                  this.excelProcessedAt = typeof ts === 'number' ? new Date(ts) : new Date(ts);
+                } else if (data.rows_read !== undefined) {
+                  this.excelProcessedAt = new Date();
+                } else {
+                  this.excelProcessedAt = null;
+                }
               } catch (e) {
-                // noop
+                this.excelProcessedAt = null;
               }
+
+              // Hide spinner only after the component has a chance to paint
+              if (typeof requestAnimationFrame !== 'undefined') {
+                requestAnimationFrame(() => requestAnimationFrame(() => this.loading.hide()));
+              } else {
+                setTimeout(() => this.loading.hide(), 0);
+              }
+
               try { this.cdr.detectChanges(); } catch (err) { /* noop */ }
             }, 0);
           } else {
@@ -69,7 +82,7 @@ export class Operaciones {
         },
         error: (err) => {
           // err is HttpErrorResponse when status is 4xx/5xx or network error
-          console.log('[Operaciones] upload error', err);
+          // upload error occurred; avoid printing error payload to console
           let message = 'Error al procesar el archivo.';
           try {
             if (err && err.error) {
@@ -108,5 +121,10 @@ export class Operaciones {
         }
       });
     }
+  }
+
+  toggleExcelDetails() {
+    this.showExcelDetails = !this.showExcelDetails;
+    try { this.cdr.detectChanges(); } catch (e) { /* noop */ }
   }
 }

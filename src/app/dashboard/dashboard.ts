@@ -35,6 +35,9 @@ export class Dashboard implements OnInit, OnDestroy {
   hasNotifications = false;
   // Si el dashboard debe mostrar datos del excel procesado
   excelDataFromUpload: any = null;
+  showExcelDetails = false;
+  // Computed Date to display when a result arrives. It's a Date or null.
+  excelProcessedAt: Date | null = null;
   
   // Cronograma cargado desde backend (/cronactivdiarias). Hay un fallback local si la petición falla.
   private scheduleData: ScheduleItem[] = [];
@@ -79,6 +82,24 @@ export class Dashboard implements OnInit, OnDestroy {
             // Defer to next macrotask and then trigger change detection
             setTimeout(() => {
               this.excelDataFromUpload = res;
+              // Compute a displayable processed-at date. Prefer backend fields; fallback to current time.
+              try {
+                if (res.processed_at) {
+                  // backend might send an ISO string
+                  this.excelProcessedAt = new Date(res.processed_at);
+                } else if (res.timestamp) {
+                  // timestamp might be numeric (ms) or ISO string
+                  const ts = res.timestamp;
+                  this.excelProcessedAt = typeof ts === 'number' ? new Date(ts) : new Date(ts);
+                } else if (res.rows_read !== undefined) {
+                  // fallback: use now as processing time when backend doesn't provide it
+                  this.excelProcessedAt = new Date();
+                } else {
+                  this.excelProcessedAt = null;
+                }
+              } catch (e) {
+                this.excelProcessedAt = null;
+              }
               if (isPlatformBrowser(this.platformId) && typeof requestAnimationFrame !== 'undefined') {
                 requestAnimationFrame(() => requestAnimationFrame(() => this.loading.hide()));
               } else {
@@ -151,7 +172,7 @@ export class Dashboard implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     // Limpiar subscripción
-    
+
     if (this.sessionExpiredSubscription) {
       this.sessionExpiredSubscription.unsubscribe();
     }
@@ -168,6 +189,11 @@ export class Dashboard implements OnInit, OnDestroy {
         // noop
       }
     }
+  }
+
+  toggleExcelDetails() {
+    this.showExcelDetails = !this.showExcelDetails;
+    try { this.cdr.detectChanges(); } catch (e) { /* noop */ }
   }
 
   toggleMenu() {
