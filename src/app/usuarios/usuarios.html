@@ -1,6 +1,6 @@
 <div class="usuarios-container">
   <h2>Gestión de Usuarios</h2>
-  <div *ngIf="loading">Cargando usuarios...</div>
+  <div *ngIf="loadingService.visible()">Cargando usuarios...</div>
   <div *ngIf="error" class="error">{{ error }}</div>
   <table *ngIf="usuarios.length">
     <thead>
