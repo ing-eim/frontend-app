@@ -16,11 +16,12 @@
         </li>
 
         <li class="has-submenu">
-          <div class="menu-item" (click)="toggleOperacionesMenu()" [class.active]="operacionesMenuOpen">
+          <!-- Use an anchor so Operaciones visually matches other menu links while still acting as a toggle -->
+          <a class="menu-link" role="button" (click)="toggleOperacionesMenu()" [class.active]="operacionesMenuOpen" tabindex="0">
             <i class="fas fa-cogs"></i>
             <span *ngIf="!sidebarCollapsed">Operaciones</span>
             <i *ngIf="!sidebarCollapsed" class="fas fa-chevron-down submenu-arrow" [class.rotated]="operacionesMenuOpen"></i>
-          </div>
+          </a>
           <ul *ngIf="operacionesMenuOpen && !sidebarCollapsed" class="submenu">
             <li>
               <a routerLink="/dashboard/operaciones/carga-archivos" routerLinkActive="active">
@@ -37,12 +38,12 @@
           </ul>
         </li>
 
-        <li>
+        <!--<li>
           <a routerLink="/dashboard/reportes" routerLinkActive="active">
             <i class="fas fa-chart-bar"></i>
             <span *ngIf="!sidebarCollapsed">Reportes</span>
           </a>
-        </li>
+        </li>-->
 
         <li>
           <a routerLink="/dashboard/usuarios" routerLinkActive="active">

@@ -151,6 +151,7 @@ export class Dashboard implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     // Limpiar subscripción
+    
     if (this.sessionExpiredSubscription) {
       this.sessionExpiredSubscription.unsubscribe();
     }
