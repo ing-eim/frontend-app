@@ -30,7 +30,7 @@ export class Auth {
   private isAutoLogoutActive: boolean = false;
   private activityListenersAttached: boolean = false;
   // Tiempo de inactividad en SEGUNDOS
-  private readonly SESSION_TIMEOUT_SECONDS = 30; // 3 minutos
+  private readonly SESSION_TIMEOUT_SECONDS = 15; // 15 minutos
 
   constructor(
     private http: HttpClient, 

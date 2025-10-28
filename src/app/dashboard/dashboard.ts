@@ -73,24 +73,11 @@ export class Dashboard implements OnInit, OnDestroy {
     // effect must be created in an injection context (constructor/factory/field)
     try {
       effect(() => {
-      // Attach manual document click listener in browser only
-      if (isPlatformBrowser(this.platformId)) {
-        try {
-          const handler = (event: Event) => this.onDocumentClick(event as MouseEvent);
-          document.addEventListener('click', handler);
-          // store handler for removal
-          (this as any).__docClickHandler = handler;
-        } catch (e) {
-          // noop
-        }
-      }
         try {
           const res = this.excelResult.result();
           if (res) {
-            console.log('[Dashboard] excel result observed in effect():', res);
             // Defer to next macrotask and then trigger change detection
             setTimeout(() => {
-              console.log('[Dashboard] assigning excelDataFromUpload in setTimeout');
               this.excelDataFromUpload = res;
               if (isPlatformBrowser(this.platformId) && typeof requestAnimationFrame !== 'undefined') {
                 requestAnimationFrame(() => requestAnimationFrame(() => this.loading.hide()));
@@ -106,6 +93,17 @@ export class Dashboard implements OnInit, OnDestroy {
       });
     } catch (e) {
       // If effect cannot be created, ignore in SSR
+    }
+
+    // Attach a single document click listener in browser only (used to close menus/modal)
+    if (isPlatformBrowser(this.platformId)) {
+      try {
+        const handler = (event: Event) => this.onDocumentClick(event as MouseEvent);
+        document.addEventListener('click', handler);
+        (this as any).__docClickHandler = handler;
+      } catch (e) {
+        // noop
+      }
     }
   }
 
@@ -146,7 +144,7 @@ export class Dashboard implements OnInit, OnDestroy {
     }
 
     // Si llegamos aquí, usar el fallback local
-    this.scheduleData = this.DEFAULT_SCHEDULE.slice();
+    //this.scheduleData = this.DEFAULT_SCHEDULE.slice();
   }
 
   // (session-expired modal is handled by SessionExpiredService + effect in constructor)
@@ -199,13 +197,21 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   onDocumentClick(event: MouseEvent) {
+    // If recently opened via the notifications toggle, ignore this document click
+    if ((this as any).__ignoreDocClose) {
+      (this as any).__ignoreDocClose = false;
+      return;
+    }
+
     const target = event.target as HTMLElement;
+    // Always close notifications on any click
+    this.notificationsOpen = false;
+
+    // Close menu only when clicking outside the user-info element
     if (!target.closest('.user-info')) {
       this.menuOpen = false;
     }
-    if (!target.closest('.topbar-right .topbar-notifications')) {
-      this.notificationsOpen = false;
-    }
+    try { this.cdr.detectChanges(); } catch (e) { /* noop */ }
   }
 
 
@@ -222,7 +228,13 @@ export class Dashboard implements OnInit, OnDestroy {
 
   // MÉTODOS PARA EL SISTEMA DE NOTIFICACIONES
   toggleNotifications() {
-    this.notificationsOpen = !this.notificationsOpen;
+    const next = !this.notificationsOpen;
+    this.notificationsOpen = next;
+    // Prevent immediate document click (same click) from immediately closing the just-opened notifications
+    if (next && isPlatformBrowser(this.platformId)) {
+      (this as any).__ignoreDocClose = true;
+      setTimeout(() => { (this as any).__ignoreDocClose = false; }, 0);
+    }
   }
 
   loadNotifications() {

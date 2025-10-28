@@ -34,29 +34,73 @@ export class Operaciones {
   // Mostrar spinner global. Auto-hide tras 20 segundos si nadie lo oculta.
   this.loading.show(20000);
 
-      this.http.post<any>(`${environment.apiUrl}/procesar-excel`, formData).subscribe({
-        next: (data) => {
-          console.log('[Operaciones] upload success, received data:', data);
-          // Defer UI updates to next macrotask to avoid ExpressionChangedAfterItHasBeenCheckedError
-          setTimeout(() => {
-            console.log('[Operaciones] applying UI updates (setTimeout)');
-            this.excelData = data;
-            this.uploadMessage = 'Archivo procesado correctamente.';
-            // Publicar resultado para que el Dashboard lo capture y oculte el spinner cuando pinte
-            this.excelResult.set(data);
-            // Navegar al dashboard para que el usuario vea el resultado
-            try {
-              this.router.navigate(['/dashboard']);
-            } catch (e) {
-              // noop
-            }
-            try { this.cdr.detectChanges(); } catch (err) { /* noop */ }
-          }, 0);
+      // Observe full response so we can validate HTTP status code
+      this.http.post<any>(`${environment.apiUrl}/procesar-excel`, formData, { observe: 'response' }).subscribe({
+        next: (resp) => {
+          // resp is HttpResponse<any>
+          if (resp && resp.status === 200) {
+            const data = resp.body;
+            console.log('[Operaciones] upload success, received data:', data);
+            // Defer UI updates to next macrotask to avoid ExpressionChangedAfterItHasBeenCheckedError
+            setTimeout(() => {
+              console.log('[Operaciones] applying UI updates (setTimeout)');
+              this.excelData = data;
+              this.uploadMessage = 'Archivo procesado correctamente.';
+              // Publicar resultado para que el Dashboard lo capture y oculte el spinner cuando pinte
+              this.excelResult.set(data);
+              // Navegar al dashboard para que el usuario vea el resultado
+              try {
+                this.router.navigate(['/dashboard']);
+              } catch (e) {
+                // noop
+              }
+              try { this.cdr.detectChanges(); } catch (err) { /* noop */ }
+            }, 0);
+          } else {
+            // Non-200 handled here
+            console.log('[Operaciones] upload returned non-200 status', resp && resp.status);
+            const detail = resp && (resp.body && (resp.body.detail || resp.body.message)) ? (resp.body.detail || resp.body.message) : null;
+            setTimeout(() => {
+              this.uploadMessage = detail ? `Error: ${detail}` : `Error: servidor respondió con status ${resp?.status}`;
+              this.loading.hide();
+              try { this.cdr.detectChanges(); } catch (err) { /* noop */ }
+            }, 0);
+          }
         },
-        error: () => {
-          console.log('[Operaciones] upload error');
+        error: (err) => {
+          // err is HttpErrorResponse when status is 4xx/5xx or network error
+          console.log('[Operaciones] upload error', err);
+          let message = 'Error al procesar el archivo.';
+          try {
+            if (err && err.error) {
+              // err.error might be an object { detail: '...' } or a string
+              if (typeof err.error === 'object' && err.error.detail) {
+                message = `Error: ${err.error.detail}`;
+              } else if (typeof err.error === 'string') {
+                // try parse JSON
+                try {
+                  const parsed = JSON.parse(err.error);
+                  if (parsed && parsed.detail) {
+                    message = `Error: ${parsed.detail}`;
+                  } else {
+                    message = `Error: ${err.error}`;
+                  }
+                } catch (e) {
+                  message = `Error: ${err.error}`;
+                }
+              } else if (err.message) {
+                message = `Error: ${err.message}`;
+              }
+            } else if (err.status) {
+              message = `Error: servidor respondió con status ${err.status}`;
+            }
+          } catch (e) {
+            // fallback
+            message = 'Error al procesar el archivo.';
+          }
+
           setTimeout(() => {
-            this.uploadMessage = 'Error al procesar el archivo.';
+            this.uploadMessage = message;
             // En caso de error también ocultamos el spinner
             this.loading.hide();
             try { this.cdr.detectChanges(); } catch (err) { /* noop */ }
