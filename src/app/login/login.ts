@@ -1,5 +1,6 @@
 import { Component, Inject, PLATFORM_ID } from '@angular/core';
 import { Auth } from './auth';
+import { ScheduleService } from '../shared/schedule.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -19,7 +20,7 @@ export class Login {
   showSessionExpiredModal: boolean = false;
   countdown: number = 5;
 
-  constructor(private auth: Auth, private router: Router, @Inject(PLATFORM_ID) private platformId: Object) {
+  constructor(private auth: Auth, private router: Router, private scheduleService: ScheduleService, @Inject(PLATFORM_ID) private platformId: Object) {
     // console.log('🏗️ Login component constructor ejecutado');
   }
 
@@ -49,10 +50,19 @@ export class Login {
         // console.log('✅ Login component - respuesta recibida:', success);
         this.loading = false;
         if (success) {
-          // console.log('🎉 Login component - login exitoso, navegando a dashboard');
+          // console.log('🎉 Login component - login exitoso, priming schedule cache and navigating to dashboard');
           this.error = '';
-          
-          this.router.navigate(['/dashboard']);
+          // Prime schedule cache so Inicio component can show data immediately
+          try {
+            this.scheduleService.fetch().then(() => {
+              try { this.router.navigate(['/dashboard','inicio']); } catch (e) { /* noop */ }
+            }).catch(() => {
+              // Even if fetch fails, proceed to dashboard inicio
+              try { this.router.navigate(['/dashboard','inicio']); } catch (e) { /* noop */ }
+            });
+          } catch (e) {
+            try { this.router.navigate(['/dashboard','inicio']); } catch (err) { /* noop */ }
+          }
         } else {
           // console.log('❌ Login component - login fallido');
           this.error = 'Usuario o contraseña incorrectos';

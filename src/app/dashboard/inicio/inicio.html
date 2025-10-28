@@ -1,0 +1,106 @@
+<div class="inicio-container">
+  <div class="card">
+    <h2>
+      Inicio — Cronograma de Actividades
+      <span class="header-badge" *ngIf="schedule">{{ schedule.length || 0 }} items</span>
+    </h2>
+
+    <div *ngIf="schedule && schedule.length === 0" class="empty">No hay actividades para mostrar.</div>
+    <div *ngIf="errorMessage" class="empty error">{{ errorMessage }}</div>
+
+    <div *ngIf="schedule && schedule.length > 0" class="table-wrap">
+      <table class="modern-table" role="table" aria-label="Cronograma de Actividades">
+        <thead>
+          <tr>
+            <th>
+              <span class="th-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"></rect>
+                  <path d="M16 3v4M8 3v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+                </svg>
+              </span>
+              Actividad
+            </th>
+            <th>
+              <span class="th-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              Días de carga
+            </th>
+            <th>
+              <span class="th-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none" />
+                  <path d="M12 7v6l4 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              Frecuencia
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of schedule">
+            <td>
+              <span class="activity-title">{{ row.actividad_descripcion || row.archivo_nombre || 'Sin descripción' }}</span>
+              <small class="activity-sub" *ngIf="row.archivo_nombre && !row.actividad_descripcion">Archivo: {{ row.archivo_nombre }}</small>
+            </td>
+            <td>
+              <div class="chips">
+                <ng-container *ngIf="row.dias_carga; else daysFromArray">
+                  <span class="chip">{{ mapDays(row.dias_carga) }}</span>
+                </ng-container>
+                <ng-template #daysFromArray>
+                  <ng-container *ngIf="row.days && row.days.length">
+                    <span class="chip" *ngFor="let d of row.days">{{ mapDays(d) }}</span>
+                  </ng-container>
+                  <ng-container *ngIf="!row.days || row.days.length === 0">
+                    <span class="subtle">—</span>
+                  </ng-container>
+                </ng-template>
+              </div>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="(row.frequency || row.frecuencia) === 'Diaria' ? 'green' : 'blue'">
+                {{ row.frequency || row.frecuencia || '—' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile: card list version -->
+    <div class="card-list" *ngIf="schedule && schedule.length > 0">
+      <div class="activity-card" *ngFor="let row of schedule">
+        <div class="card-row-top">
+          <div>
+            <div class="activity-title">{{ row.actividad_descripcion || row.archivo_nombre || 'Sin descripción' }}</div>
+            <div class="activity-sub" *ngIf="row.archivo_nombre && !row.actividad_descripcion">Archivo: {{ row.archivo_nombre }}</div>
+          </div>
+          <div>
+            <span class="badge" [ngClass]="(row.frequency || row.frecuencia) === 'Diaria' ? 'green' : 'blue'">{{ row.frequency || row.frecuencia || '—' }}</span>
+          </div>
+        </div>
+
+        <div class="card-row-bottom">
+          <div class="chips">
+            <ng-container *ngIf="row.dias_carga; else mobileDaysFromArray">
+              <span class="chip">{{ mapDays(row.dias_carga) }}</span>
+            </ng-container>
+            <ng-template #mobileDaysFromArray>
+              <ng-container *ngIf="row.days && row.days.length">
+                <span class="chip" *ngFor="let d of row.days">{{ mapDays(d) }}</span>
+              </ng-container>
+              <ng-container *ngIf="!row.days || row.days.length === 0">
+                <span class="subtle">—</span>
+              </ng-container>
+            </ng-template>
+          </div>
+          <div class="meta subtle">Frecuencia: <strong>{{ row.frequency || row.frecuencia || '—' }}</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

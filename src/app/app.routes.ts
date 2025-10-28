@@ -9,6 +9,7 @@ export const routes: Routes = [
     loadComponent: () => import('./dashboard/dashboard').then(m => m.Dashboard),
     children: [
       { path: '', redirectTo: 'operaciones', pathMatch: 'full' },
+  { path: 'inicio', loadComponent: () => import('./dashboard/inicio/inicio').then(m => m.Inicio) },
       { path: 'operaciones', loadComponent: () => import('./operaciones/operaciones/operaciones').then(m => m.Operaciones) },
       { path: 'operaciones/carga-archivos', loadComponent: () => import('./operaciones/operaciones/operaciones').then(m => m.Operaciones) },
   { path: 'operaciones/sincronizacion', loadComponent: () => import('./operaciones/sincronizacion/sincronizacion').then(m => m.Sincronizacion) },
