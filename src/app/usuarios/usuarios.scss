@@ -13,28 +13,58 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(56, 142, 60, 0.15);
 }
 th, td {
-  border: 1px solid #ccc;
-  padding: 0.75rem;
+  border: none;
+  padding: 1rem 0.75rem;
   text-align: left;
+  border-bottom: 1px solid rgba(56, 142, 60, 0.1);
 }
 th {
-  background: #1976d2;
-  color: #fff;
+  background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%);
+  color: #ffffff;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.9rem;
+}
+tr:hover td {
+  background-color: rgba(56, 142, 60, 0.05);
+  transition: background-color 0.2s ease;
+}
+tr:nth-child(even) td {
+  background-color: rgba(56, 142, 60, 0.02);
 }
 td button {
   margin-right: 0.5rem;
-  background: #1976d2;
+  background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%);
   color: #fff;
   border: none;
-  border-radius: 0.3rem;
-  padding: 0.3rem 0.7rem;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.8rem;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(56, 142, 60, 0.2);
+}
+td button:hover {
+  background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(56, 142, 60, 0.3);
 }
 td button:last-child {
-  background: #d32f2f;
+  background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+  box-shadow: 0 2px 8px rgba(211, 47, 47, 0.2);
+}
+td button:last-child:hover {
+  background: linear-gradient(135deg, #b71c1c 0%, #8b0000 100%);
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
 }
 .error {
   color: #d32f2f;
@@ -61,13 +91,29 @@ td button:last-child {
 }
 .crear-usuario-form button {
   margin-right: 0.5rem;
-  background: #1976d2;
+  background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%);
   color: #fff;
   border: none;
-  border-radius: 0.3rem;
-  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  padding: 0.6rem 1.2rem;
   cursor: pointer;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(56, 142, 60, 0.2);
+}
+.crear-usuario-form button:hover {
+  background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(56, 142, 60, 0.3);
 }
 .crear-usuario-form button[type="button"] {
-  background: #aaa;
+  background: linear-gradient(135deg, #757575 0%, #616161 100%);
+  box-shadow: 0 2px 8px rgba(117, 117, 117, 0.2);
+}
+.crear-usuario-form button[type="button"]:hover {
+  background: linear-gradient(135deg, #616161 0%, #424242 100%);
+  box-shadow: 0 4px 12px rgba(117, 117, 117, 0.3);
 }
