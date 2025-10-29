@@ -20,7 +20,38 @@ import { SessionExpiredService } from './session-expired.service';
   styles: [
     `.session-expired-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:99999}
      .session-expired-modal{background:#2a2a2a;color:#fff;padding:2rem;border-radius:1rem;min-width:320px;max-width:480px;text-align:center}
-     .session-expired-modal .icon{font-size:2.5rem;margin-bottom:1rem}`
+     .session-expired-modal .icon{font-size:2.5rem;margin-bottom:1rem}
+     .session-expired-modal button{
+       font-family: 'Montserrat', 'Inter', 'Segoe UI', sans-serif;
+       background: linear-gradient(135deg, #388E3C 0%, #2E7D32 50%, #1B5E20 100%);
+       color: #ffffff;
+       border: none;
+       border-radius: 12px;
+       padding: 12px 24px;
+       font-size: 15px;
+       font-weight: 700;
+       text-transform: uppercase;
+       letter-spacing: 1px;
+       cursor: pointer;
+       transition: all 0.3s ease;
+       box-shadow: 0 6px 20px rgba(56, 142, 60, 0.35);
+       min-width: 180px;
+       margin-top: 1rem;
+     }
+     .session-expired-modal button:hover{
+       background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 50%, #0D4715 100%);
+       transform: translateY(-2px);
+       box-shadow: 0 10px 30px rgba(56, 142, 60, 0.5);
+       letter-spacing: 1.5px;
+     }
+     .session-expired-modal button:active{
+       transform: translateY(-1px);
+       box-shadow: 0 6px 20px rgba(56, 142, 60, 0.4);
+     }
+     .session-expired-modal button:focus{
+       outline: none;
+       box-shadow: 0 0 0 3px rgba(56, 142, 60, 0.4);
+     }`
   ]
 })
 export class SessionExpiredModal implements OnInit, OnDestroy {
