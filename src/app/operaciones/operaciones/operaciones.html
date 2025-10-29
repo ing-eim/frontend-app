@@ -1,7 +1,10 @@
 <div class="excel-upload-container">
   <h2>Cargar archivo Excel</h2>
   <form>
-    <input type="file" accept=".xlsx,.xls" (change)="onFileSelected($event)" />
+    <div class="file-input-container">
+      <input type="file" accept=".xlsx,.xls" (change)="onFileSelected($event)" />
+      <div class="file-status">{{ selectedFile ? selectedFile.name : 'No se eligió ningún archivo' }}</div>
+    </div>
     <button type="button" (click)="uploadFile()" [disabled]="!selectedFile">Subir archivo</button>
   </form>
   <div *ngIf="uploadMessage" class="upload-message">{{ uploadMessage }}</div>

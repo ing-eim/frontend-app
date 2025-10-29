@@ -139,7 +139,7 @@ export class Dashboard implements OnInit, OnDestroy {
       setTimeout(() => this.loadNotifications(), 0);
     }
 
-    // ngOnInit used only for async startup tasks (fetchScheduleFromServer handled above)
+
   }
 
   private async fetchScheduleFromServer(): Promise<void> {
@@ -252,6 +252,8 @@ export class Dashboard implements OnInit, OnDestroy {
       try { this.auth.finalizeLogout(); } catch (err) { /* noop */ }
     }
   }
+
+
 
   // MÉTODOS PARA EL SISTEMA DE NOTIFICACIONES
   toggleNotifications() {

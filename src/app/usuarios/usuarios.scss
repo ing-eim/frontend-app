@@ -117,3 +117,32 @@ td button:last-child:hover {
   background: linear-gradient(135deg, #616161 0%, #424242 100%);
   box-shadow: 0 4px 12px rgba(117, 117, 117, 0.3);
 }
+
+// Estilo para el botón "Crear usuario" principal
+.usuarios-container > button {
+  background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 0.6rem;
+  padding: 0.8rem 1.6rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 12px rgba(56, 142, 60, 0.25);
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  
+  &:hover {
+    background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(56, 142, 60, 0.35);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 12px rgba(56, 142, 60, 0.25);
+  }
+}
