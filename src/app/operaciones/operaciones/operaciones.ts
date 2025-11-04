@@ -21,7 +21,9 @@ export class Operaciones {
     'ontime': '/procesar-excel',
     'incidencias': '/procesar-incidencias',
     'pipelineTransporte':'/procesar-pipeline-transporte',
-    'pipelinetransporte':'/procesar-pipeline-transporte'
+    'pipelinetransporte':'/procesar-pipeline-transporte',
+    'pipelineComercial':'/procesar-pipeline-comercial',
+    'pipelinecomercial':'/procesar-pipeline-comercial'
 
   };
 
