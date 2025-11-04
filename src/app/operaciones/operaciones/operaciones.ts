@@ -23,8 +23,10 @@ export class Operaciones {
     'pipelineTransporte':'/procesar-pipeline-transporte',
     'pipelinetransporte':'/procesar-pipeline-transporte',
     'pipelineComercial':'/procesar-pipeline-comercial',
-    'pipelinecomercial':'/procesar-pipeline-comercial'
-
+    'pipelinecomercial':'/procesar-pipeline-comercial',
+    'disponibilidadTransporte':'/procesar-disponibilidad-transporte',
+    'disponibilidadtransporte':'/procesar-disponibilidad-transporte',
+    'factoraje':'/procesar-factoraje'
   };
 
   constructor(private http: HttpClient, private loading: LoadingService, private cdr: ChangeDetectorRef) {}
