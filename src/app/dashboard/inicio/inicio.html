@@ -23,7 +23,7 @@
           </div>
           <div class="stat-info">
             <div class="stat-number">{{ getTodayActivities() }}</div>
-            <div class="stat-label">Cargas Hoy</div>
+            <div class="stat-label">Cargas para Hoy</div>
           </div>
         </div>
         <div class="stat-card">
@@ -31,8 +31,8 @@
             <i class="fas fa-check-circle"></i>
           </div>
           <div class="stat-info">
-            <div class="stat-number">98.5%</div>
-            <div class="stat-label">Disponibilidad</div>
+            <div class="stat-number">{{ systemStats.dataQualityPercent || 0 }}%</div>
+            <div class="stat-label">Calidad de Datos</div>
           </div>
         </div>
       </div>
@@ -40,14 +40,14 @@
 
     <!-- KPI Cards Row - DATOS 100% REALES -->
     <div class="kpi-row">
-      <div class="kpi-card" [ngClass]="systemStats.systemStatus === 'Operativo' ? 'success' : systemStats.systemStatus === 'Mantenimiento' ? 'warning' : 'danger'">
+      <div class="kpi-card" [ngClass]="systemStats.pendingUsers === 0 ? 'success' : systemStats.pendingUsers <= 2 ? 'info' : 'warning'">
         <div class="kpi-header">
-          <h3>Estado del Sistema</h3>
-          <i class="fas fa-heartbeat"></i>
+          <h3>Usuarios Pendientes</h3>
+          <i class="fas fa-upload"></i>
         </div>
-        <div class="kpi-value">{{ systemStats.systemStatus }}</div>
+        <div class="kpi-value">{{ systemStats.pendingUsers }}</div>
         <div class="kpi-trend neutral">
-          <i class="fas fa-clock"></i> Última actividad: {{ systemStats.lastActivityDate }}
+          <i class="fas fa-calendar-day"></i> Archivos del día pendientes
         </div>
       </div>
       
@@ -56,7 +56,7 @@
           <h3>Usuarios Activos</h3>
           <i class="fas fa-users"></i>
         </div>
-        <div class="kpi-value">{{ systemStats.activeUsers }}/{{ systemStats.totalUsers }}</div>
+        <div class="kpi-value">{{ systemStats.activeUsers }}/{{ systemStats.totalUsers }} - {{ auth.getUsername() }}</div>
         <div class="kpi-trend neutral">
           <i class="fas fa-calendar-week"></i> Últimos 7 días
         </div>
@@ -64,13 +64,24 @@
       
       <div class="kpi-card warning">
         <div class="kpi-header">
-          <h3>Actividad del Sistema</h3>
-          <i class="fas fa-chart-line"></i>
+          <h3>Archivos Recientes</h3>
+          <i class="fas fa-file-upload"></i>
         </div>
-        <div class="kpi-value">{{ systemStats.recentActivities }}</div>
-        <div class="kpi-trend" [ngClass]="activityTrend.todayVsYesterday > 0 ? 'up' : activityTrend.todayVsYesterday < 0 ? 'down' : 'neutral'">
-          <i class="fas" [ngClass]="activityTrend.todayVsYesterday > 0 ? 'fa-arrow-up' : activityTrend.todayVsYesterday < 0 ? 'fa-arrow-down' : 'fa-equals'"></i> 
-          {{ activityTrend.todayVsYesterday > 0 ? '+' : '' }}{{ activityTrend.todayVsYesterday }}% vs ayer
+        <div class="kpi-value">{{ systemStats.recentUploads?.length || 0 }}</div>
+        
+        <!-- Lista de archivos recientes -->
+        <div class="recent-uploads-section" *ngIf="systemStats.recentUploads && systemStats.recentUploads.length > 0">
+          <div class="uploads-list">
+            <div class="upload-item" *ngFor="let upload of systemStats.recentUploads">
+              <div class="upload-file">{{ upload.archivo }}</div>
+              <div class="upload-meta">{{ upload.fecha }} - {{ upload.usuario }}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="no-recent-uploads" *ngIf="!systemStats.recentUploads || systemStats.recentUploads.length === 0">
+          <i class="fas fa-info-circle"></i>
+          <span>No hay archivos cargados recientes</span>
         </div>
       </div>
     </div>
@@ -202,25 +213,25 @@
             <div class="metric-circle" [attr.data-percentage]="systemStats.dataQualityPercent">
               <div class="metric-inner">
                 <span class="metric-value">{{ systemStats.dataQualityPercent }}%</span>
-                <span class="metric-label">Calidad de Datos</span>
               </div>
             </div>
+            <div class="metric-label">Calidad de Datos</div>
           </div>
           <div class="metric-item">
             <div class="metric-circle" [attr.data-percentage]="systemStats.etlProcessesSuccess">
               <div class="metric-inner">
                 <span class="metric-value">{{ systemStats.etlProcessesSuccess }}%</span>
-                <span class="metric-label">ETL Exitosos</span>
               </div>
             </div>
+            <div class="metric-label">ETL Exitosos</div>
           </div>
           <div class="metric-item">
             <div class="metric-circle" [attr.data-percentage]="systemStats.storageEfficiency">
               <div class="metric-inner">
                 <span class="metric-value">{{ systemStats.storageEfficiency }}%</span>
-                <span class="metric-label">Eficiencia Storage</span>
               </div>
             </div>
+            <div class="metric-label">Eficiencia Storage</div>
           </div>
         </div>
       </div>
@@ -279,43 +290,64 @@
         </div>
       </div>
 
-      <!-- System Status Section -->
+      <!-- Analytics & Trends Section -->
       <div class="grid-section full-width">
         <div class="section-header">
-          <h3><i class="fas fa-server"></i> Estado de Servicios</h3>
+          <h3><i class="fas fa-chart-line"></i> Tendencias y Análisis</h3>
         </div>
-        <div class="services-grid">
-          <div class="service-card operational">
-            <div class="service-status">
-              <i class="fas fa-check-circle"></i>
-              <span class="status-text">Operativo</span>
+        <div class="analytics-grid">
+          <div class="analytics-card" [ngClass]="systemStats.dailyGrowthPercent > 0 ? 'positive' : systemStats.dailyGrowthPercent < 0 ? 'negative' : 'neutral'">
+            <div class="analytics-header">
+              <i class="fas fa-trending-up"></i>
+              <span class="analytics-title">Crecimiento Diario</span>
             </div>
-            <div class="service-name">Base de Datos Principal</div>
-            <div class="service-uptime">Uptime: 99.9%</div>
-          </div>
-          <div class="service-card operational">
-            <div class="service-status">
-              <i class="fas fa-check-circle"></i>
-              <span class="status-text">Operativo</span>
+            <div class="analytics-value">
+              {{ systemStats.dailyGrowthPercent > 0 ? '+' : '' }}{{ systemStats.dailyGrowthPercent }}%
             </div>
-            <div class="service-name">Servidor de Aplicaciones</div>
-            <div class="service-uptime">Uptime: 99.8%</div>
+            <div class="analytics-subtitle">vs ayer</div>
           </div>
-          <div class="service-card warning">
-            <div class="service-status">
+          
+          <div class="analytics-card info">
+            <div class="analytics-header">
+              <i class="fas fa-search"></i>
+              <span class="analytics-title">Consultas Ejecutadas</span>
+            </div>
+            <div class="analytics-value">{{ systemStats.weeklyQueries }}</div>
+            <div class="analytics-subtitle">últimos 7 días</div>
+          </div>
+          
+          <div class="analytics-card warning" *ngIf="systemStats.activeAlerts > 0">
+            <div class="analytics-header">
               <i class="fas fa-exclamation-triangle"></i>
-              <span class="status-text">Advertencia</span>
+              <span class="analytics-title">Alertas Activas</span>
             </div>
-            <div class="service-name">Servicio de Backup</div>
-            <div class="service-uptime">Último backup: 2h</div>
+            <div class="analytics-value">{{ systemStats.activeAlerts }}</div>
+            <div class="analytics-subtitle">requieren atención</div>
           </div>
-          <div class="service-card operational">
-            <div class="service-status">
+          
+          <div class="analytics-card success" *ngIf="systemStats.activeAlerts === 0">
+            <div class="analytics-header">
               <i class="fas fa-check-circle"></i>
-              <span class="status-text">Operativo</span>
+              <span class="analytics-title">Sistema Estable</span>
             </div>
-            <div class="service-name">API Gateway</div>
-            <div class="service-uptime">Uptime: 100%</div>
+            <div class="analytics-value">0</div>
+            <div class="analytics-subtitle">alertas activas</div>
+          </div>
+          
+          <div class="analytics-card department-usage">
+            <div class="analytics-header">
+              <i class="fas fa-users"></i>
+              <span class="analytics-title">Uso por Departamento</span>
+            </div>
+            <div class="department-list" *ngIf="systemStats.departmentUsage && systemStats.departmentUsage.length > 0">
+              <div class="department-item" *ngFor="let dept of systemStats.departmentUsage">
+                <span class="dept-name">{{ dept.name }}</span>
+                <span class="dept-count">{{ dept.count }}</span>
+              </div>
+            </div>
+            <div class="no-usage" *ngIf="!systemStats.departmentUsage || systemStats.departmentUsage.length === 0">
+              No hay datos de uso disponibles
+            </div>
           </div>
         </div>
       </div>

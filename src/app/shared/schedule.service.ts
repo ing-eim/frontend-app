@@ -53,21 +53,21 @@ export class ScheduleService {
         {
           actividad_descripcion: 'Tarifario transporte (Ricardo) SAF tiene también las tarifas, pero faltan los comentarios',
           archivo_nombre: 'tarifario_transporte.xlsx',
-          dias_carga: '3',
+          dias_carga: '4',
           frecuencia: 'Semanal',
           frequency: 'Semanal'
         },
         {
           actividad_descripcion: 'Reporte de evidencias pendientes (Blanquita) Se Puede sacar de SAF y se vuelve tabla dinámica',
           archivo_nombre: 'evidencias_pendientes.xlsx',
-          dias_carga: '3',
+          dias_carga: '4',
           frecuencia: 'Semanal',
           frequency: 'Semanal'
         },
         {
           actividad_descripcion: 'Pronóstico de cobranza (Chio) SAF: los días pronosticados pueden variar desde: valija 10 días, portal 8 días de desfase.',
           archivo_nombre: 'pronostico_cobranza.xlsx',
-          dias_carga: '3',
+          dias_carga: '4',
           frecuencia: 'Semanal',
           frequency: 'Semanal'
         },

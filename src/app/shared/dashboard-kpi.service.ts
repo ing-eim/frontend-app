@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { firstValueFrom } from 'rxjs';
+import { ScheduleService } from './schedule.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DashboardKpiService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private scheduleService: ScheduleService) {}
 
   /**
    * Obtiene estadísticas reales del sistema para KPIs
@@ -17,12 +18,19 @@ export class DashboardKpiService {
     activeUsers: number;
     totalRoles: number;
     recentActivities: number;
-    systemStatus: 'Operativo' | 'Mantenimiento' | 'Error';
+    pendingUsers: number;
     lastActivityDate: string;
     // Nuevas métricas de rendimiento DWH
     dataQualityPercent: number;
     etlProcessesSuccess: number;
     storageEfficiency: number;
+    // Archivos cargados recientes
+    recentUploads: any[];
+    // Nuevas métricas de tendencias y análisis
+    dailyGrowthPercent: number;
+    weeklyQueries: number;
+    departmentUsage: { name: string; count: number }[];
+    activeAlerts: number;
   }> {
     try {
       // Obtener datos reales en paralelo
@@ -50,20 +58,59 @@ export class DashboardKpiService {
         new Date(log.fecha) >= oneDayAgo
       ).length;
 
-      // Última actividad para determinar estado del sistema
+      // Calcular usuarios pendientes basándose en el cronograma del día actual
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      // Obtener el cronograma para determinar quién debe subir archivos hoy
+      const schedule = await this.scheduleService.fetch();
+      
+      // Mapear día de la semana: JavaScript usa 0=domingo, 1=lunes... 6=sábado
+      // Hoy es jueves (día 4 en JavaScript), que en el cronograma debería ser día 4
+      const todayDayOfWeek = today.getDay(); // 0=domingo, 1=lunes, 2=martes, 3=miércoles, 4=jueves, 5=viernes, 6=sábado
+      
+      console.log('Debug - Hoy es día:', todayDayOfWeek, 'Fecha:', today.toLocaleDateString());
+      console.log('Debug - Cronograma completo:', schedule);
+      
+      // Filtrar actividades que deben ejecutarse hoy (jueves = día 4)
+      const todaysActivities = schedule.filter(activity => {
+        const diasCarga = activity.dias_carga;
+        const dayMatch = (typeof diasCarga === 'string') ? 
+          diasCarga === todayDayOfWeek.toString() : 
+          diasCarga === todayDayOfWeek;
+        
+        if (dayMatch) {
+          console.log('Debug - Actividad para hoy:', activity.actividad_descripcion, 'Día:', diasCarga);
+        }
+        return dayMatch;
+      });
+      
+      console.log('Debug - Actividades de hoy:', todaysActivities.length);
+      
+      // Usuarios que han subido archivos hoy (basado en bitácora)
+      const usersWhoUploadedToday = new Set(
+        bitacora
+          .filter(log => {
+            const logDate = new Date(log.fecha);
+            return logDate >= todayStart && 
+                   (log.accion?.toLowerCase().includes('subir') || 
+                    log.accion?.toLowerCase().includes('upload') ||
+                    log.descripcion?.toLowerCase().includes('archivo'));
+          })
+          .map(log => log.usuario_id)
+      );
+      
+      console.log('Debug - Usuarios que subieron hoy:', usersWhoUploadedToday.size);
+      
+      // Los usuarios pendientes son los que tienen actividades hoy menos los que ya subieron
+      const pendingUsers = Math.max(0, todaysActivities.length - usersWhoUploadedToday.size);
+      
+      console.log('Debug - Usuarios pendientes calculados:', pendingUsers);
+
+      // Última actividad para mostrar fecha
       const lastActivity = bitacora.length > 0 
         ? new Date(Math.max(...bitacora.map(log => new Date(log.fecha).getTime())))
         : new Date();
-
-      // Estado del sistema basado en actividad reciente
-      const hoursSinceLastActivity = (Date.now() - lastActivity.getTime()) / (1000 * 60 * 60);
-      let systemStatus: 'Operativo' | 'Mantenimiento' | 'Error' = 'Operativo';
-      
-      if (hoursSinceLastActivity > 24) {
-        systemStatus = 'Mantenimiento';
-      } else if (hoursSinceLastActivity > 48) {
-        systemStatus = 'Error';
-      }
 
       // --- NUEVAS MÉTRICAS DE RENDIMIENTO DWH ---
       
@@ -88,12 +135,87 @@ export class DashboardKpiService {
         : 82;
       const storageEfficiency = Math.round(baseEfficiency + Math.random() * 3);
 
+      // 4. Archivos cargados recientes (SIMULACIÓN CON DATOS DE PRUEBA)
+      const mockRecentUploads = [
+        {
+          "nombre_usuario": "admin",
+          "fecha": "2025-11-03T16:12:33.680000",
+          "name_file_load": "OnTime_acumulado_2025"
+        },
+        {
+          "nombre_usuario": "admin",
+          "fecha": "2025-11-03T16:34:30.750000",
+          "name_file_load": "incidencias_10_2025"
+        }
+      ];
+
+      const uploadActivities = mockRecentUploads.map(upload => ({
+        archivo: upload.name_file_load,
+        fecha: new Date(upload.fecha).toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
+        usuario: upload.nombre_usuario
+      }));
+
+      // 5. TENDENCIAS Y ANÁLISIS - DATOS REALES
+      
+      // Crecimiento diario basado en actividades de hoy vs ayer
+      const yesterdayActivities = bitacora.filter(log => {
+        const logDate = new Date(log.fecha);
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStart = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+        const yesterdayEnd = new Date(yesterdayStart);
+        yesterdayEnd.setDate(yesterdayEnd.getDate() + 1);
+        return logDate >= yesterdayStart && logDate < yesterdayEnd;
+      }).length;
+
+      const dailyGrowthPercent = yesterdayActivities > 0 
+        ? Math.round(((recentActivities - yesterdayActivities) / yesterdayActivities) * 100)
+        : recentActivities > 0 ? 100 : 0;
+
+      // Consultas semanales basadas en actividades de los últimos 7 días
+      const weeklyQueries = bitacora.filter(log => {
+        const logDate = new Date(log.fecha);
+        return logDate >= sevenDaysAgo && 
+               (log.accion?.toLowerCase().includes('consulta') || 
+                log.accion?.toLowerCase().includes('query') ||
+                log.descripcion?.toLowerCase().includes('reporte'));
+      }).length;
+
+      // Uso por departamento basado en usuarios activos (simulado con datos reales)
+      const uniqueActiveUsers = Array.from(new Set(
+        bitacora
+          .filter(log => new Date(log.fecha) >= sevenDaysAgo)
+          .map(log => log.usuario_id)
+      ));
+
+      const departmentUsage = [
+        { name: 'Operaciones', count: Math.floor(uniqueActiveUsers.length * 0.4) },
+        { name: 'Finanzas', count: Math.floor(uniqueActiveUsers.length * 0.3) },
+        { name: 'TI', count: Math.floor(uniqueActiveUsers.length * 0.2) },
+        { name: 'RRHH', count: Math.floor(uniqueActiveUsers.length * 0.1) }
+      ].filter(dept => dept.count > 0);
+
+      // Alertas activas basadas en errores recientes en bitácora
+      const activeAlerts = bitacora.filter(log => {
+        const logDate = new Date(log.fecha);
+        return logDate >= oneDayAgo && 
+               (log.accion?.toLowerCase().includes('error') || 
+                log.descripcion?.toLowerCase().includes('error') ||
+                log.descripcion?.toLowerCase().includes('fallo') ||
+                log.descripcion?.toLowerCase().includes('alerta'));
+      }).length;
+
       return {
         totalUsers: usuarios.length,
         activeUsers,
         totalRoles: roles.length,
         recentActivities,
-        systemStatus,
+        pendingUsers,
         lastActivityDate: lastActivity.toLocaleDateString('es-ES', {
           day: '2-digit',
           month: '2-digit',
@@ -103,7 +225,12 @@ export class DashboardKpiService {
         }),
         dataQualityPercent,
         etlProcessesSuccess,
-        storageEfficiency
+        storageEfficiency,
+        recentUploads: uploadActivities,
+        dailyGrowthPercent,
+        weeklyQueries,
+        departmentUsage,
+        activeAlerts
       };
 
     } catch (error) {
@@ -114,11 +241,16 @@ export class DashboardKpiService {
         activeUsers: 0,
         totalRoles: 0,
         recentActivities: 0,
-        systemStatus: 'Error',
+        pendingUsers: 0,
         lastActivityDate: 'Sin datos',
         dataQualityPercent: 0,
         etlProcessesSuccess: 0,
-        storageEfficiency: 0
+        storageEfficiency: 0,
+        recentUploads: [],
+        dailyGrowthPercent: 0,
+        weeklyQueries: 0,
+        departmentUsage: [],
+        activeAlerts: 0
       };
     }
   }

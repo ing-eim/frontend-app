@@ -27,12 +27,13 @@ export class Inicio implements OnInit, AfterViewInit {
     activeUsers: 0,
     totalRoles: 0,
     recentActivities: 0,
-    systemStatus: 'Cargando...',
+    pendingUsers: 0,
     lastActivityDate: 'Cargando...',
     // Nuevas métricas de rendimiento
     dataQualityPercent: 0,
     etlProcessesSuccess: 0,
-    storageEfficiency: 0
+    storageEfficiency: 0,
+    recentUploads: []
   };
   
   activityTrend: any = {
@@ -198,5 +199,15 @@ export class Inicio implements OnInit, AfterViewInit {
     } catch (error) {
       console.warn('Error actualizando círculos de métricas:', error);
     }
+  }
+
+  getRecentUploadsTooltip(): string {
+    if (!this.systemStats.recentUploads || this.systemStats.recentUploads.length === 0) {
+      return 'No hay archivos cargados recientes';
+    }
+    
+    return this.systemStats.recentUploads
+      .map((upload: any) => `${upload.archivo} - ${upload.fecha} (${upload.usuario})`)
+      .join('\n');
   }
 }
