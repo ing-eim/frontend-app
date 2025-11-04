@@ -16,26 +16,63 @@ export class Operaciones {
   excelData: any = null;
   showExcelDetails = false;
   excelProcessedAt: Date | null = null;
+  // Mapping from keyword -> endpoint
+  private filenameEndpointMap: { [key: string]: string } = {
+    'ontime': '/procesar-excel',
+    'incidencias': '/procesar-incidencias'
+  };
 
   constructor(private http: HttpClient, private loading: LoadingService, private cdr: ChangeDetectorRef) {}
+
+  // Helper to safely update uploadMessage in the next macrotask to avoid ExpressionChangedAfterItHasBeenCheckedError
+  private setUploadMessage(msg: string) {
+    setTimeout(() => {
+      this.uploadMessage = msg;
+      try { this.cdr.detectChanges(); } catch (e) { /* noop */ }
+    }, 0);
+  }
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       this.selectedFile = input.files[0];
-      this.uploadMessage = '';
+      this.setUploadMessage('');
     }
   }
 
   uploadFile() {
-    if (this.selectedFile) {
+    if (!this.selectedFile) {
+      return;
+    }
+
+    // Run the upload logic in the next macrotask so any UI changes (uploadMessage, ngIfs)
+    // happen after the current change-detection cycle. This avoids ExpressionChangedAfterItHasBeenCheckedError
+    setTimeout(() => {
+      // Decide endpoint based on filename keywords
+      const name = (this.selectedFile!.name || '').toLowerCase();
+      let endpoint = `${environment.apiUrl}/procesar-excel`;
+      let matchedKey: string | null = null;
+      for (const key of Object.keys(this.filenameEndpointMap)) {
+        if (name.includes(key)) {
+          matchedKey = key;
+          endpoint = `${environment.apiUrl}${this.filenameEndpointMap[key]}`;
+          break;
+        }
+      }
+
+      if (matchedKey) {
+        this.setUploadMessage(`Procesando con endpoint asociado: ${this.filenameEndpointMap[matchedKey]}`);
+      } else {
+        this.setUploadMessage(`Nombre de archivo no coincide con reglas; se usará endpoint por defecto /procesar-excel`);
+      }
+
       const formData = new FormData();
-      formData.append('file', this.selectedFile);
-  // Mostrar spinner global. Auto-hide tras 20 segundos si nadie lo oculta.
-  this.loading.show(20000);
+      formData.append('file', this.selectedFile!);
+      // Mostrar spinner global. Auto-hide tras 20 segundos si nadie lo oculta.
+      this.loading.show(20000);
 
       // Observe full response so we can validate HTTP status code
-      this.http.post<any>(`${environment.apiUrl}/procesar-excel`, formData, { observe: 'response' }).subscribe({
+      this.http.post<any>(endpoint, formData, { observe: 'response' }).subscribe({
         next: (resp) => {
           // resp is HttpResponse<any>
           if (resp && resp.status === 200) {
@@ -43,7 +80,7 @@ export class Operaciones {
             // Defer UI updates to next macrotask to avoid ExpressionChangedAfterItHasBeenCheckedError
             setTimeout(() => {
               this.excelData = data;
-              this.uploadMessage = 'Archivo procesado correctamente.';
+              this.setUploadMessage('Archivo procesado correctamente.');
               // Compute a displayable processed-at date. Prefer backend fields; fallback to now.
               try {
                 if (data.processed_at) {
@@ -51,7 +88,7 @@ export class Operaciones {
                 } else if (data.timestamp) {
                   const ts = data.timestamp;
                   this.excelProcessedAt = typeof ts === 'number' ? new Date(ts) : new Date(ts);
-                } else if (data.rows_read !== undefined) {
+                } else if (data.rows_read !== undefined || data.rows_inserted !== undefined) {
                   this.excelProcessedAt = new Date();
                 } else {
                   this.excelProcessedAt = null;
@@ -74,9 +111,8 @@ export class Operaciones {
             console.log('[Operaciones] upload returned non-200 status', resp && resp.status);
             const detail = resp && (resp.body && (resp.body.detail || resp.body.message)) ? (resp.body.detail || resp.body.message) : null;
             setTimeout(() => {
-              this.uploadMessage = detail ? `Error: ${detail}` : `Error: servidor respondió con status ${resp?.status}`;
+              this.setUploadMessage(detail ? `Error: ${detail}` : `Error: servidor respondió con status ${resp.status}`);
               this.loading.hide();
-              try { this.cdr.detectChanges(); } catch (err) { /* noop */ }
             }, 0);
           }
         },
@@ -113,14 +149,13 @@ export class Operaciones {
           }
 
           setTimeout(() => {
-            this.uploadMessage = message;
+            this.setUploadMessage(message);
             // En caso de error también ocultamos el spinner
             this.loading.hide();
-            try { this.cdr.detectChanges(); } catch (err) { /* noop */ }
           }, 0);
         }
       });
-    }
+    }, 0);
   }
 
   toggleExcelDetails() {

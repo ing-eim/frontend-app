@@ -1,8 +1,8 @@
 import { Injectable, NgZone, PLATFORM_ID, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { tap, catchError, map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { isPlatformBrowser } from '@angular/common';
 import { SessionExpiredService } from '../shared/session-expired.service';
@@ -30,7 +30,7 @@ export class Auth {
   private isAutoLogoutActive: boolean = false;
   private activityListenersAttached: boolean = false;
   // Tiempo de inactividad en SEGUNDOS
-  private readonly SESSION_TIMEOUT_SECONDS = 15 * 60; // 15 minutos
+  private readonly SESSION_TIMEOUT_SECONDS =  15* 60; // 15 minutos
 
   constructor(
     private http: HttpClient, 
@@ -309,9 +309,6 @@ export class Auth {
       }),
       map((res: LoginResponse) => {
         return !!(res && res.access_token);
-      }),
-      catchError(() => {
-        return of(false);
       }),
       tap(success => {
         if (!success) {

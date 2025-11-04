@@ -69,9 +69,14 @@ export class Login {
         }
       },
       error: (error) => {
-        // console.log('💥 Login component - error en login:', error);
+         console.log('💥 Login component - error en login:', error);
         this.loading = false;
-        this.error = 'Error de conexión';
+        // If interceptor mapped it to a 503, show the specific message in the error DIV.
+        if (error && error.status === 503) {
+          this.error = 'Error 503 — Servicio No Disponible. Contacte con TI.';
+        } else {
+          this.error = 'Error de conexión';
+        }
       }
     });
   }

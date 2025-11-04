@@ -20,7 +20,7 @@
     <div class="excel-card-body">
       <div class="metric">
         <div class="metric-label">Filas Procesadas</div>
-        <div class="metric-value">{{ excelData.rows_read ?? (excelData.rows ?? excelData.length ?? 'N/D') }}</div>
+        <div class="metric-value">{{ excelData.rows_read ?? excelData.rows_inserted ?? (excelData.rows ?? excelData.length ?? 'N/D') }}</div>
       </div>
       <div class="metric-meta">Fecha: {{ excelProcessedAt ? (excelProcessedAt | date:'short') : 'N/D' }}</div>
     </div>

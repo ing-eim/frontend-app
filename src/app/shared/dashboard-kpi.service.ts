@@ -93,9 +93,9 @@ export class DashboardKpiService {
           .filter(log => {
             const logDate = new Date(log.fecha);
             return logDate >= todayStart && 
-                   (log.accion?.toLowerCase().includes('subir') || 
-                    log.accion?.toLowerCase().includes('upload') ||
-                    log.descripcion?.toLowerCase().includes('archivo'));
+                  ((log.accion || '').toLowerCase().includes('subir') || 
+                            (log.accion || '').toLowerCase().includes('upload') ||
+                            (log.descripcion || '').toLowerCase().includes('archivo'));
           })
           .map(log => log.usuario_id)
       );
@@ -116,9 +116,9 @@ export class DashboardKpiService {
       
       // 1. Calidad de Datos (basado en errores vs total de actividades)
       const errorActivities = bitacora.filter(log => 
-        log.accion?.toLowerCase().includes('error') || 
-        log.descripcion?.toLowerCase().includes('error') ||
-        log.descripcion?.toLowerCase().includes('fallo')
+        (log.accion || '').toLowerCase().includes('error') || 
+        (log.descripcion || '').toLowerCase().includes('error')||
+        (log.descripcion || '').toLowerCase().includes('fallo')
       ).length;
       const dataQualityPercent = bitacora.length > 0 
         ? Math.round(((bitacora.length - errorActivities) / bitacora.length) * 100)
@@ -135,29 +135,22 @@ export class DashboardKpiService {
         : 82;
       const storageEfficiency = Math.round(baseEfficiency + Math.random() * 3);
 
-      // 4. Archivos cargados recientes (SIMULACIÓN CON DATOS DE PRUEBA)
-      const mockRecentUploads = [
-        {
-          "nombre_usuario": "admin",
-          "fecha": "2025-11-03T16:12:33.680000",
-          "name_file_load": "OnTime_acumulado_2025"
-        },
-        {
-          "nombre_usuario": "admin",
-          "fecha": "2025-11-03T16:34:30.750000",
-          "name_file_load": "incidencias_10_2025"
-        }
-      ];
+      // 4. Archivos cargados recientes — obtener desde el endpoint protegido /mi-bitacora-operaciones
+      // El endpoint requiere token; usamos firstValueFrom para obtener el array y caemos a [] en errores.
+      const recentUploadsRaw = await firstValueFrom(
+        this.http.get<any[]>(`${environment.apiUrl}/mi-bitacora-operaciones/`)
+      ).catch(() => []);
 
-      const uploadActivities = mockRecentUploads.map(upload => ({
-        archivo: upload.name_file_load,
-        fecha: new Date(upload.fecha).toLocaleDateString('es-ES', {
+      const uploadActivities = (recentUploadsRaw || []).map((upload: any) => ({
+        // Normalizar distintos posibles nombres de campo que el endpoint pueda devolver
+        archivo: upload.name_file_load ?? upload.name_file ?? upload.file_name ?? upload.nombre_archivo ?? upload.filename ?? '',
+        fecha: new Date(upload.fecha ?? upload.timestamp ?? upload.created_at ?? Date.now()).toLocaleDateString('es-ES', {
           day: '2-digit',
           month: '2-digit',
           hour: '2-digit',
           minute: '2-digit'
         }),
-        usuario: upload.nombre_usuario
+        usuario: upload.nombre_usuario ?? upload.usuario ?? upload.user ?? 'desconocido'
       }));
 
       // 5. TENDENCIAS Y ANÁLISIS - DATOS REALES
@@ -181,9 +174,9 @@ export class DashboardKpiService {
       const weeklyQueries = bitacora.filter(log => {
         const logDate = new Date(log.fecha);
         return logDate >= sevenDaysAgo && 
-               (log.accion?.toLowerCase().includes('consulta') || 
-                log.accion?.toLowerCase().includes('query') ||
-                log.descripcion?.toLowerCase().includes('reporte'));
+               ((log.accion || '').toLowerCase().includes('consulta') || 
+                (log.accion || '').toLowerCase().includes('query') ||
+                (log.descripcion || '').toLowerCase().includes('reporte'));
       }).length;
 
       // Uso por departamento basado en usuarios activos (simulado con datos reales)
@@ -204,10 +197,10 @@ export class DashboardKpiService {
       const activeAlerts = bitacora.filter(log => {
         const logDate = new Date(log.fecha);
         return logDate >= oneDayAgo && 
-               (log.accion?.toLowerCase().includes('error') || 
-                log.descripcion?.toLowerCase().includes('error') ||
-                log.descripcion?.toLowerCase().includes('fallo') ||
-                log.descripcion?.toLowerCase().includes('alerta'));
+               ((log.accion || '').toLowerCase().includes('error') || 
+                (log.descripcion || '').toLowerCase().includes('error') ||
+                (log.descripcion || '').toLowerCase().includes('fallo') ||
+                (log.descripcion || '').toLowerCase().includes('alerta'));
       }).length;
 
       return {
