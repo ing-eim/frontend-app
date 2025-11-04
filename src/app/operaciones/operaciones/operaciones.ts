@@ -19,7 +19,10 @@ export class Operaciones {
   // Mapping from keyword -> endpoint
   private filenameEndpointMap: { [key: string]: string } = {
     'ontime': '/procesar-excel',
-    'incidencias': '/procesar-incidencias'
+    'incidencias': '/procesar-incidencias',
+    'pipelineTransporte':'/procesar-pipeline-transporte',
+    'pipelinetransporte':'/procesar-pipeline-transporte'
+
   };
 
   constructor(private http: HttpClient, private loading: LoadingService, private cdr: ChangeDetectorRef) {}
@@ -53,6 +56,8 @@ export class Operaciones {
       let endpoint = `${environment.apiUrl}/procesar-excel`;
       let matchedKey: string | null = null;
       for (const key of Object.keys(this.filenameEndpointMap)) {
+        console.log('[Operaciones] checking filename for key:', key);
+        console.log('[Operaciones] filename:', name);
         if (name.includes(key)) {
           matchedKey = key;
           endpoint = `${environment.apiUrl}${this.filenameEndpointMap[key]}`;
@@ -61,7 +66,7 @@ export class Operaciones {
       }
 
       if (matchedKey) {
-        this.setUploadMessage(`Procesando con endpoint asociado: ${this.filenameEndpointMap[matchedKey]}`);
+        this.setUploadMessage(`Procesand...: ${this.filenameEndpointMap[matchedKey]}`);
       } else {
         this.setUploadMessage(`Nombre de archivo no coincide con reglas; se usará endpoint por defecto /procesar-excel`);
       }
