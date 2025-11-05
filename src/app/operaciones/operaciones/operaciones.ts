@@ -20,13 +20,11 @@ export class Operaciones {
   private filenameEndpointMap: { [key: string]: string } = {
     'ontime': '/procesar-excel',
     'incidencias': '/procesar-incidencias',
-    'pipelineTransporte':'/procesar-pipeline-transporte',
     'pipelinetransporte':'/procesar-pipeline-transporte',
-    'pipelineComercial':'/procesar-pipeline-comercial',
     'pipelinecomercial':'/procesar-pipeline-comercial',
-    'disponibilidadTransporte':'/procesar-disponibilidad-transporte',
     'disponibilidadtransporte':'/procesar-disponibilidad-transporte',
-    'factoraje':'/procesar-factoraje'
+    'factoraje':'/procesar-factoraje',
+    'relacionpago':'/procesar-relacion-pago'
   };
 
   constructor(private http: HttpClient, private loading: LoadingService, private cdr: ChangeDetectorRef) {}
