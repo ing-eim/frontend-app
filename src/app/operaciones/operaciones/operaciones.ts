@@ -24,7 +24,10 @@ export class Operaciones {
     'pipelinecomercial':'/procesar-pipeline-comercial',
     'disponibilidadtransporte':'/procesar-disponibilidad-transporte',
     'factoraje':'/procesar-factoraje',
-    'relacionpago':'/procesar-relacion-pago'
+    'relacionpago':'/procesar-relacion-pago',
+    'evidenciaspendientes':'/procesar-evidencias-pendientes',
+    'ventaperdida':'/procesar-venta-perdida',
+    'pronosticocobranza':'/procesar-pronostico-cobranza'
   };
 
   constructor(private http: HttpClient, private loading: LoadingService, private cdr: ChangeDetectorRef) {}
@@ -76,7 +79,7 @@ export class Operaciones {
       const formData = new FormData();
       formData.append('file', this.selectedFile!);
       // Mostrar spinner global. Auto-hide tras 20 segundos si nadie lo oculta.
-      this.loading.show(20000);
+      this.loading.show(50000);
 
       // Observe full response so we can validate HTTP status code
       this.http.post<any>(endpoint, formData, { observe: 'response' }).subscribe({
