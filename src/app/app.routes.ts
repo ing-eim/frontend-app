@@ -13,6 +13,7 @@ export const routes: Routes = [
       { path: 'operaciones', loadComponent: () => import('./operaciones/operaciones/operaciones').then(m => m.Operaciones) },
       { path: 'operaciones/carga-archivos', loadComponent: () => import('./operaciones/operaciones/operaciones').then(m => m.Operaciones) },
   { path: 'operaciones/sincronizacion', loadComponent: () => import('./operaciones/sincronizacion/sincronizacion').then(m => m.Sincronizacion) },
+    { path: 'operaciones/registro', loadComponent: () => import('./operaciones/registro/registro').then(m => m.Registro) },
       { path: 'reportes', loadComponent: () => import('./reportes/reportes/reportes').then(m => m.Reportes) },
       { path: 'usuarios', loadComponent: () => import('./usuarios/usuarios').then(m => m.Usuarios) },
       { path: 'roles', loadComponent: () => import('./roles/roles').then(m => m.Roles) },
