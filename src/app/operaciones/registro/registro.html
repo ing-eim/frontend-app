@@ -18,7 +18,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let row of logs" [class.error-row]="row.tipo?.toUpperCase() === 'ERROR'">
+  <tr *ngFor="let row of logs" [class.error-row]="row.tipo.toUpperCase() === 'ERROR'">
           <td>{{ row.fechaHora }}</td>
           <td>{{ row.tipo }}</td>
           <td><pre class="log-message">{{ row.message }}</pre></td>
