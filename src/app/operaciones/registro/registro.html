@@ -1,14 +1,16 @@
 <div class="registro-container">
   <div class="registro-header">
-    <h2>Registro API</h2>
+    <h2>Registro de Operaciones</h2>
     <div class="actions">
+      <input type="text" class="filter-input" placeholder="Filtrar por mensaje..." (input)="onFilterChange($any($event.target).value)" />
       <button class="btn" (click)="refresh()">Actualizar</button>
     </div>
   </div>
 
   <div *ngIf="error" class="error">{{ error }}</div>
 
-  <div *ngIf="logs && logs.length > 0" class="table-wrap">
+  <div *ngIf="filteredLogs && filteredLogs.length > 0" class="table-wrap">
+    <div class="results-info">Mostrando {{ displayedLogs.length }} de {{ filteredLogs.length }} (total {{ logs.length }})</div>
     <table class="registro-table" role="table" aria-label="Registro API">
       <thead>
         <tr>
@@ -18,13 +20,29 @@
         </tr>
       </thead>
       <tbody>
-  <tr *ngFor="let row of logs" [class.error-row]="row.tipo.toUpperCase() === 'ERROR'">
+        <tr *ngFor="let row of displayedLogs" [class.error-row]="row.tipo.toUpperCase() === 'ERROR'">
           <td>{{ row.fechaHora }}</td>
           <td>{{ row.tipo }}</td>
           <td><pre class="log-message">{{ row.message }}</pre></td>
         </tr>
       </tbody>
     </table>
+
+    <!-- Pagination controls -->
+    <div class="pagination-controls">
+      <div class="page-size">
+        <label>Registros por página:</label>
+        <select [value]="pageSize" (change)="changePageSize($any($event.target).value)">
+          <option *ngFor="let s of pageSizes" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+
+      <div class="pager">
+        <button (click)="changePage(-1)" [disabled]="pageIndex <= 0">Anterior</button>
+        <span>Página {{ pageIndex + 1 }} de {{ totalPages }}</span>
+        <button (click)="changePage(1)" [disabled]="(pageIndex + 1) >= totalPages">Siguiente</button>
+      </div>
+    </div>
   </div>
 
   <div *ngIf="!logs || logs.length === 0" class="empty">No hay registros disponibles.</div>

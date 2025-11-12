@@ -7,6 +7,13 @@
   align-items: center;
   margin-bottom: 1rem;
 }
+.filter-input { padding: 0.45rem 0.6rem; border-radius:6px; border:1px solid #ddd; margin-right:0.5rem; }
+.results-info { margin-bottom: 0.5rem; color: #444; font-size: 0.95rem; }
+.pagination-controls { display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem; }
+.pagination-controls .page-size { display:flex; align-items:center; gap:0.5rem; }
+.pagination-controls select { padding:0.35rem 0.5rem; border-radius:6px; border:1px solid #ddd; }
+.pager button { background:#fff; border:1px solid #ddd; padding:0.4rem 0.7rem; border-radius:6px; cursor:pointer; }
+.pager button[disabled] { opacity:0.5; cursor:not-allowed; }
 .registro-table {
   width: 100%;
   border-collapse: collapse;
