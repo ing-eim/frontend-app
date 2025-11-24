@@ -66,6 +66,9 @@
         </li>
       </ul>
     </nav>
+    <div class="sidebar-footer" *ngIf="!sidebarCollapsed">
+      <span class="version-text">v{{ version }}</span>
+    </div>
   </aside>
   <div class="main-content">
     <header class="topbar">

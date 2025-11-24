@@ -183,6 +183,14 @@
   border: 1px solid rgba(255, 107, 107, 0.3);
 }
 
+.login-form .version {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 0.5rem;
+  opacity: 0.7;
+}
+
 /* Modal de Sesión Expirada */
 .session-expired-overlay {
   position: fixed;

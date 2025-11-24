@@ -22,6 +22,7 @@ export class Dashboard implements OnInit, OnDestroy {
   menuOpen = false;
   sidebarCollapsed = false;
   operacionesMenuOpen = false;
+  version: string = environment.version;
   
   // MODAL DE SESIÓN EXPIRADA
   // Session modal is handled by SessionExpiredModal component and SessionExpiredService

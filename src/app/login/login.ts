@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { isPlatformBrowser } from '@angular/common';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -19,6 +20,7 @@ export class Login {
   loading: boolean = false;
   showSessionExpiredModal: boolean = false;
   countdown: number = 5;
+  version: string = environment.version;
 
   constructor(private auth: Auth, private router: Router, private scheduleService: ScheduleService, @Inject(PLATFORM_ID) private platformId: Object) {
     // console.log('🏗️ Login component constructor ejecutado');
