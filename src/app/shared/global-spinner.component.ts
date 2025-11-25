@@ -7,7 +7,7 @@ import { LoadingService } from './loading.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="global-spinner-overlay" *ngIf="visible()">
+    <div class="global-spinner-overlay" *ngIf="visible$ | async">
       <div class="spinner-box">
         <div class="spinner">
           <div class="spinner-inner"></div>
@@ -86,6 +86,8 @@ import { LoadingService } from './loading.service';
   ]
 })
 export class GlobalSpinner {
-  constructor(private loading: LoadingService) {}
-  visible = () => this.loading.visible();
+  visible$;
+  constructor(private loading: LoadingService) {
+    this.visible$ = this.loading.visible$;
+  }
 }

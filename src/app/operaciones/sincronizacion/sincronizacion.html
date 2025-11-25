@@ -3,6 +3,13 @@
   <p>Sincronización con SAF</p>
 
   <div class="actions">
-      <button class="sync-btn" type="button" (click)="sincronizarConSAF()" [disabled]="isProcessing">Sincronizar con SAF</button>
+      <button class="sync-btn" type="button" (click)="sincronizarConSAF()" [disabled]="isProcessing">
+        <span *ngIf="!isProcessing">Sincronizar con SAF</span>
+        <span *ngIf="isProcessing">Sincronizando...</span>
+      </button>
+  </div>
+
+  <div *ngIf="message" class="message-box" [class.success]="message.includes('exitosamente') || message.includes('completada')">
+    {{ message }}
   </div>
 </div>

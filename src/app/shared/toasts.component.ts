@@ -7,8 +7,8 @@ import { ToastService } from './toast.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="toasts-container" *ngIf="toasts().length">
-      <div class="toast" *ngFor="let t of toasts()" [attr.data-type]="t.type">
+    <div class="toasts-container" *ngIf="(toasts$ | async) as toastList" [hidden]="!toastList.length">
+      <div class="toast" *ngFor="let t of toastList" [attr.data-type]="t.type">
         <div class="toast-message">{{ t.message }}</div>
         <button class="toast-close" (click)="dismiss(t.id)" aria-label="Cerrar">×</button>
       </div>
@@ -51,7 +51,9 @@ import { ToastService } from './toast.service';
   ]
 })
 export class ToastsComponent {
-  constructor(private toast: ToastService) {}
-  toasts = () => this.toast.toasts();
+  toasts$;
+  constructor(private toast: ToastService) {
+    this.toasts$ = this.toast.toasts$;
+  }
   dismiss(id: number) { this.toast.remove(id); }
 }

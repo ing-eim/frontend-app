@@ -1,9 +1,10 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class LoadingService {
-  private _visible = signal(false);
-  readonly visible = this._visible.asReadonly();
+  private _visible = new BehaviorSubject<boolean>(false);
+  readonly visible$ = this._visible.asObservable();
 
   // timer id for automatic hide fallback
   private autoHideTimer: any = null;
@@ -18,7 +19,7 @@ export class LoadingService {
       this.autoHideTimer = null;
     }
 
-    this._visible.set(true);
+    this._visible.next(true);
 
     if (typeof timeoutMs === 'number' && timeoutMs > 0) {
       this.autoHideTimer = setTimeout(() => {
@@ -33,6 +34,6 @@ export class LoadingService {
       clearTimeout(this.autoHideTimer);
       this.autoHideTimer = null;
     }
-    this._visible.set(false);
+    this._visible.next(false);
   }
 }
