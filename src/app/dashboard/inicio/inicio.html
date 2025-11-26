@@ -89,6 +89,27 @@
     <!-- Main Content Grid -->
     <div class="dashboard-grid">
       
+      <!-- Quick Actions Section -->
+      <div class="grid-section full-width">
+        <div class="section-header">
+          <h3><i class="fas fa-bolt"></i> Acciones Rápidas</h3>
+        </div>
+        <div class="quick-actions">
+          <button class="action-btn primary" routerLink="/dashboard/operaciones/carga-archivos">
+            <i class="fas fa-upload"></i>
+            <span>Cargar Archivo</span>
+          </button>
+          <button class="action-btn secondary" routerLink="/dashboard/operaciones/sincronizacion">
+            <i class="fas fa-sync-alt"></i>
+            <span>Sincronizar</span>
+          </button>
+          <button class="action-btn tertiary" routerLink="/dashboard/usuarios">
+            <i class="fas fa-users"></i>
+            <span>Gestionar Usuarios</span>
+          </button>
+        </div>
+      </div>
+      
       <!-- Cronograma Section -->
       <div class="grid-section full-width">
         <div class="section-header">
@@ -242,7 +263,7 @@
           <h3><i class="fas fa-history"></i> Actividad Reciente</h3>
         </div>
         <div class="activity-timeline">
-          <div class="timeline-item success">
+          <!--<div class="timeline-item success">
             <div class="timeline-dot"></div>
             <div class="timeline-content">
               <div class="timeline-title">Carga completada exitosamente</div>
@@ -257,7 +278,7 @@
               <div class="timeline-time">Hace 32 minutos</div>
               <div class="timeline-desc">Sincronización de inventarios</div>
             </div>
-          </div>
+          </div>-->
           <div class="timeline-item info">
             <div class="timeline-dot"></div>
             <div class="timeline-content">
@@ -266,27 +287,6 @@
               <div class="timeline-desc">{{ auth.getUsername() }} inició sesión</div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Quick Actions Section -->
-      <div class="grid-section">
-        <div class="section-header">
-          <h3><i class="fas fa-bolt"></i> Acciones Rápidas</h3>
-        </div>
-        <div class="quick-actions">
-          <button class="action-btn primary" routerLink="/dashboard/operaciones/carga-archivos">
-            <i class="fas fa-upload"></i>
-            <span>Cargar Archivo</span>
-          </button>
-          <button class="action-btn secondary" routerLink="/dashboard/operaciones/sincronizacion">
-            <i class="fas fa-sync-alt"></i>
-            <span>Sincronizar</span>
-          </button>
-          <button class="action-btn tertiary" routerLink="/dashboard/usuarios">
-            <i class="fas fa-users"></i>
-            <span>Gestionar Usuarios</span>
-          </button>
         </div>
       </div>
 

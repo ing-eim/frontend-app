@@ -78,8 +78,8 @@ export class Operaciones {
 
       const formData = new FormData();
       formData.append('file', this.selectedFile!);
-      // Mostrar spinner global. Auto-hide tras 20 segundos si nadie lo oculta.
-      this.loading.show(50000);
+      // Mostrar spinner global sin timeout - se ocultará manualmente al recibir respuesta
+      this.loading.show();
 
       // Observe full response so we can validate HTTP status code
       this.http.post<any>(endpoint, formData, { observe: 'response' }).subscribe({
