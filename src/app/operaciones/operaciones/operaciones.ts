@@ -27,7 +27,8 @@ export class Operaciones {
     'relacionpago':'/procesar-relacion-pago',
     'evidenciaspendientes':'/procesar-evidencias-pendientes',
     'ventaperdida':'/procesar-venta-perdida',
-    'pronosticocobranza':'/procesar-pronostico-cobranza'
+    'pronosticocobranza':'/procesar-pronostico-cobranza',
+    'presupuesto':'/procesar-presupuesto',
   };
 
   constructor(private http: HttpClient, private loading: LoadingService, private cdr: ChangeDetectorRef) {}
