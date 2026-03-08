@@ -68,6 +68,9 @@ export class Operaciones {
           matchedKey = key;
           endpoint = `${environment.apiUrl}${this.filenameEndpointMap[key]}`;
           break;
+        }else{
+          endpoint = '';
+          console.log(`[Operaciones] filename does not include key: ${key}`);
         }
       }
 
@@ -81,6 +84,11 @@ export class Operaciones {
       formData.append('file', this.selectedFile!);
       // Mostrar spinner global sin timeout - se ocultará manualmente al recibir respuesta
       this.loading.show();
+      if (!endpoint) {
+        this.setUploadMessage('Nombre de archivo no coincide con reglas; no se puede procesar el archivo.');
+        this.loading.hide();
+        return;
+      }
 
       // Observe full response so we can validate HTTP status code
       this.http.post<any>(endpoint, formData, { observe: 'response' }).subscribe({
